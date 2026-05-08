@@ -7,7 +7,7 @@ import { BlurView } from 'expo-blur';
 import { router } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import { Timer, Flame, Trophy } from 'lucide-react-native';
-import * as Haptics from 'expo-haptics';
+import { impactAsync, ImpactFeedbackStyle } from 'expo-haptics';
 import { useGuildLeaderboard, type LeaderboardPost, type LeaderboardMember } from '@/lib/useGuildLeaderboard';
 import { VideoGridThumb } from './VideoGridThumb';
 
@@ -54,7 +54,7 @@ function TopPostCard({
       <Pressable
         style={card.wrap}
         onPress={() => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          impactAsync(ImpactFeedbackStyle.Light);
           router.push({ pathname: '/post/[id]', params: { id: post.id } });
         }}
       >
@@ -88,7 +88,7 @@ function TopPostCard({
             <Pressable
               style={card.authorRow}
               onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                impactAsync(ImpactFeedbackStyle.Light);
                 router.push({ pathname: '/user/[id]', params: { id: post.author_id } });
               }}
             >
@@ -151,7 +151,7 @@ function MemberRow({
       <Pressable
         style={member_s.wrap}
         onPress={() => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          impactAsync(ImpactFeedbackStyle.Light);
           router.push({ pathname: '/user/[id]', params: { id: member.id } });
         }}
       >

@@ -22,17 +22,15 @@ import Animated, {
   withSequence,
   runOnJS,
   Easing,
-  type SharedValue,
 } from 'react-native-reanimated';
-import {
-  Gesture,
-  GestureDetector,
-  GestureHandlerRootView,
-  TouchableOpacity,
-} from 'react-native-gesture-handler';
 import { X, Send, Trash2, Copy, Video } from 'lucide-react-native';
-import * as Clipboard from 'expo-clipboard';
-import * as Haptics from 'expo-haptics';
+import { setStringAsync as setClipboardStringAsync } from 'expo-clipboard';
+import {
+  impactAsync,
+  notificationAsync,
+  ImpactFeedbackStyle,
+  NotificationFeedbackType,
+} from 'expo-haptics';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useComments, useAddComment, useDeleteComment, type Comment } from '@/lib/useComments';
 import { useAuthStore } from '@/lib/authStore';
@@ -81,8 +79,6 @@ export default function CommentsSheet({ postId, visible, onClose, mediaUrl, medi
   const overlayOpacity = useSharedValue(0);
   const contentOpacity = useSharedValue(0);
   const keyboardOffset = useKeyboardOffset();
-  const scrollAtTop = useSharedValue(1);
-  const lastTouchY = useSharedValue(0);
   const isClosingRef = useRef(false);
 
   const handleClose = useCallback(() => {
@@ -112,59 +108,6 @@ export default function CommentsSheet({ postId, visible, onClose, mediaUrl, medi
     }
   }, [visible, overlayOpacity, contentOpacity, translateY]);
 
-  const panGesture = Gesture.Pan()
-    .minDistance(8)
-    .activeOffsetY([-999, 10])
-    .onUpdate((e) => {
-      if (e.translationY > 0) translateY.value = e.translationY;
-    })
-    .onEnd((e) => {
-      const threshold = 70;
-      const velocityThreshold = 350;
-      const shouldClose =
-        e.translationY > threshold ||
-        e.velocityY > velocityThreshold ||
-        (e.translationY > 40 && e.velocityY > 120);
-      if (shouldClose) {
-        runOnJS(handleClose)();
-      } else {
-        translateY.value = withTiming(0, { duration: 80 });
-      }
-    });
-
-  const panForList = Gesture.Pan()
-    .minDistance(8)
-    .manualActivation(true)
-    .onTouchesDown((e, stateManager) => {
-      if (e.allTouches.length > 0) lastTouchY.value = e.allTouches[0].y;
-    })
-    .onTouchesMove((e, stateManager) => {
-      if (e.allTouches.length === 0) return;
-      const deltaY = e.allTouches[0].y - lastTouchY.value;
-      lastTouchY.value = e.allTouches[0].y;
-      if (scrollAtTop.value === 1 && deltaY > 5) {
-        stateManager.activate();
-      } else {
-        stateManager.fail();
-      }
-    })
-    .onUpdate((e) => {
-      if (e.translationY > 0) translateY.value = e.translationY;
-    })
-    .onEnd((e) => {
-      const threshold = 70;
-      const velocityThreshold = 350;
-      const shouldClose =
-        e.translationY > threshold ||
-        e.velocityY > velocityThreshold ||
-        (e.translationY > 40 && e.velocityY > 120);
-      if (shouldClose) {
-        runOnJS(handleClose)();
-      } else {
-        translateY.value = withTiming(0, { duration: 80 });
-      }
-    });
-
   const sheetStyle = useAnimatedStyle(() => ({
     position: 'absolute',
     left: 0,
@@ -193,7 +136,7 @@ export default function CommentsSheet({ postId, visible, onClose, mediaUrl, medi
       statusBarTranslucent
       onRequestClose={handleClose}
     >
-      <GestureHandlerRootView style={{ flex: 1 }}>
+      <View style={{ flex: 1 }}>
         {/* Hintergrund – sanftes Ein-/Ausblenden */}
         <Pressable style={StyleSheet.absoluteFill} onPress={handleClose}>
           <Animated.View style={overlayStyle} pointerEvents="none" />
@@ -219,7 +162,7 @@ export default function CommentsSheet({ postId, visible, onClose, mediaUrl, medi
             />
           </Animated.View>
         </Animated.View>
-      </GestureHandlerRootView>
+      </View>
     </Modal>
   );
 }
@@ -258,7 +201,7 @@ function SheetInner({
       { text: trimmed, tempId },
       {
         onSuccess: (newComment) => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          impactAsync(ImpactFeedbackStyle.Light);
           setLastSentId(newComment.id);
           timersRef.current.push(setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 50));
           timersRef.current.push(setTimeout(() => setLastSentId(null), 1200));
@@ -329,7 +272,7 @@ function SheetInner({
               timeAgo={timeAgo(item.created_at)}
               onDelete={() => handleDelete(item.id)}
               onLongPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                impactAsync(ImpactFeedbackStyle.Medium);
                 setActionSheetComment(item);
               }}
               isHighlighted={item.id === lastSentId}
@@ -364,17 +307,16 @@ function SheetInner({
               onSubmitEditing={handleSend}
             />
           </View>
-        <TouchableOpacity
+        <Pressable
           onPress={handleSend}
           disabled={!text.trim() || addComment.isPending}
           style={[styles.sendBtn, (!text.trim() || addComment.isPending) && styles.sendBtnDisabled]}
-          activeOpacity={0.7}
         >
           {addComment.isPending
             ? <ActivityIndicator color="#A78BFA" size="small" />
             : <Send size={18} stroke={text.trim() ? '#A78BFA' : '#374151'} strokeWidth={2} />
           }
-        </TouchableOpacity>
+        </Pressable>
       </View>
 
       <CommentActionSheet
@@ -414,8 +356,8 @@ function CommentActionSheet({
 
   const handleCopy = () => {
     if (comment?.text) {
-      Clipboard.setStringAsync(comment.text);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setClipboardStringAsync(comment.text);
+      notificationAsync(NotificationFeedbackType.Success);
       onCopy(comment.text);
     }
     onClose();

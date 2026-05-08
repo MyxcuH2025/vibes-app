@@ -8,7 +8,7 @@ import { FlashList } from '@shopify/flash-list';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router } from 'expo-router';
 import { MessageCircle, PenSquare, Search, X } from 'lucide-react-native';
-import * as Haptics from 'expo-haptics';
+import { impactAsync, ImpactFeedbackStyle } from 'expo-haptics';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/authStore';
@@ -33,7 +33,7 @@ function ConvItem({ item }: { item: Conversation }) {
     <Pressable
       style={[styles.item, hasUnread && styles.itemUnread]}
       onPress={() => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        impactAsync(ImpactFeedbackStyle.Light);
         router.push({ pathname: '/messages/[id]', params: { id: item.id, username: item.other_user.username ?? '', avatarUrl: item.other_user.avatar_url ?? '' } });
       }}
     >
@@ -103,7 +103,7 @@ function NewMessageModal({ visible, onClose }: { visible: boolean; onClose: () =
   });
 
   const handleSelect = async (user: UserResult) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impactAsync(ImpactFeedbackStyle.Light);
     const convId = await openConv(user.id);
     onClose();
     router.push({ pathname: '/messages/[id]', params: { id: convId, username: user.username ?? '', avatarUrl: user.avatar_url ?? '' } });
@@ -195,7 +195,7 @@ export default function MessagesScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>Nachrichten</Text>
         <Pressable
-          onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); setShowNew(true); }}
+          onPress={() => { impactAsync(ImpactFeedbackStyle.Light); setShowNew(true); }}
           style={styles.composeBtn}
           hitSlop={8}
         >

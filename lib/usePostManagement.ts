@@ -20,10 +20,12 @@ export function useDeletePost() {
 
       if (error) throw error;
 
-      // Storage-Datei löschen (optional, kein Fehler wenn nicht vorhanden)
+      // Legacy Supabase-Storage-Datei löschen. Neue Uploads liegen in R2 und
+      // werden hier bewusst nicht clientseitig entfernt.
       if (post?.media_url) {
         const url = post.media_url as string;
-        const bucketPath = url.split('/posts/')[1];
+        const marker = '/storage/v1/object/public/posts/';
+        const bucketPath = url.includes(marker) ? url.split(marker)[1] : null;
         if (bucketPath) {
           await supabase.storage.from('posts').remove([bucketPath]);
         }

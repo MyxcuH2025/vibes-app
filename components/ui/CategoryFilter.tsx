@@ -7,7 +7,7 @@ import Animated, {
   withSequence,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
-import * as Haptics from 'expo-haptics';
+import { impactAsync, ImpactFeedbackStyle } from 'expo-haptics';
 
 export type Category = {
   id: string | null;
@@ -35,7 +35,7 @@ function ForYouPill({ isActive, onPress }: { isActive: boolean; onPress: () => v
   const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
 
   const handlePress = useCallback(() => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impactAsync(ImpactFeedbackStyle.Light);
     scale.value = withSequence(
       withTiming(0.88, { duration: 60 }),
       withTiming(1, { duration: 80 })
@@ -80,7 +80,7 @@ function CategoryPill({
   }));
 
   const handlePress = useCallback(() => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impactAsync(ImpactFeedbackStyle.Light);
     scale.value = withSequence(
       withTiming(0.85, { duration: 60 }),
       withTiming(1, { duration: 80 })

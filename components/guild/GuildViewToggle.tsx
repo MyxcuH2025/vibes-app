@@ -1,6 +1,6 @@
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Rss, Trophy } from 'lucide-react-native';
-import * as Haptics from 'expo-haptics';
+import { impactAsync, ImpactFeedbackStyle } from 'expo-haptics';
 import { guildStyles as styles } from './guildStyles';
 import type { GuildViewMode } from './guildConstants';
 
@@ -16,7 +16,7 @@ export function GuildViewToggle({
       <TouchableOpacity
         style={[styles.toggleBtn, mode === 'feed' && styles.toggleBtnActive]}
         onPress={() => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          impactAsync(ImpactFeedbackStyle.Light);
           onChange('feed');
         }}
         activeOpacity={0.75}
@@ -27,7 +27,7 @@ export function GuildViewToggle({
       <TouchableOpacity
         style={[styles.toggleBtn, mode === 'leaderboard' && styles.toggleBtnActiveGold]}
         onPress={() => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          impactAsync(ImpactFeedbackStyle.Light);
           onChange('leaderboard');
         }}
         activeOpacity={0.75}

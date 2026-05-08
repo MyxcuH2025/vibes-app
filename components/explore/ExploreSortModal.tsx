@@ -1,6 +1,6 @@
 import { Modal, Pressable, View, Text } from 'react-native';
 import { Check } from 'lucide-react-native';
-import * as Haptics from 'expo-haptics';
+import { impactAsync, ImpactFeedbackStyle } from 'expo-haptics';
 import {
   EXPLORE_SORT_OPTIONS,
   type ExploreSortMode,
@@ -34,7 +34,7 @@ export function ExploreSortModal({
                   key={opt.id}
                   style={[styles.optionRow, active && styles.optionRowActive]}
                   onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    impactAsync(ImpactFeedbackStyle.Light);
                     onSelectSort(opt.id);
                     onClose();
                   }}

@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import { View, TextInput, Pressable } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Search, X, SlidersHorizontal } from 'lucide-react-native';
-import * as Haptics from 'expo-haptics';
+import { impactAsync, ImpactFeedbackStyle } from 'expo-haptics';
 import { exploreStyles as styles } from './exploreStyles';
 import type { ExploreSortMode } from '@/lib/useExplore';
 
@@ -51,7 +51,7 @@ export function ExploreSearchBar({
 
       <Pressable
         onPress={() => {
-          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          impactAsync(ImpactFeedbackStyle.Light);
           onOpenSort();
         }}
         style={[styles.filterBtn, sortMode !== 'forYou' && styles.filterBtnActive]}

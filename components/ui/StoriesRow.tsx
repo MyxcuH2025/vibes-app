@@ -6,7 +6,7 @@ import Animated, {
   withRepeat, withSequence, withTiming, Easing,
 } from 'react-native-reanimated';
 import { Plus } from 'lucide-react-native';
-import * as Haptics from 'expo-haptics';
+import { impactAsync, ImpactFeedbackStyle } from 'expo-haptics';
 import type { StoryGroup } from '@/lib/useStories';
 import { useAuthStore } from '@/lib/authStore';
 
@@ -53,7 +53,7 @@ function StoryBubble({
     <Pressable
       style={styles.bubble}
       onPress={() => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        impactAsync(ImpactFeedbackStyle.Light);
         onPress();
       }}
     >
@@ -91,7 +91,7 @@ function AddStoryBubble({ onPress }: { onPress: () => void }) {
     <Pressable
       style={styles.bubble}
       onPress={() => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        impactAsync(ImpactFeedbackStyle.Light);
         onPress();
       }}
     >

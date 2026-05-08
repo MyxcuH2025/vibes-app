@@ -49,7 +49,6 @@ import { RoomContext } from "@livekit/components-react";
 import { Room, RoomEvent, Track } from "livekit-client";
 import type { TrackPublication, Participant } from "livekit-client";
 import {
-  useLiveSession,
   useLiveHost,
   useLiveComments,
   useLiveReactions,
@@ -59,7 +58,7 @@ import {
 import LiveShareSheet from "@/components/ui/LiveShareSheet";
 import ViewerListSheet from "@/components/ui/ViewerListSheet";
 // expo-constants: default import causes _interopRequireDefault TypeError in Hermes HBC
-// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const _cMod = require("expo-constants") as any;
 const Constants = _cMod?.default ?? _cMod;
 
@@ -269,7 +268,6 @@ function HostUI({
   onEnd: () => void;
 }) {
   const insets = useSafeAreaInsets();
-  const { data: session } = useLiveSession(sessionId);
   const { comments, sendComment } = useLiveComments(sessionId);
   const { reactions, sendReaction } = useLiveReactions(sessionId);
   const { viewerCount, peakViewers } = useViewerCount(sessionId);

@@ -15,7 +15,7 @@ import {
   type ImagePickerAsset,
 } from "expo-image-picker";
 import { supabase } from "@/lib/supabase";
-import { uploadPostMedia } from "@/lib/uploadMedia";
+import { generateAndUploadThumbnail, uploadPostMedia } from "@/lib/uploadMedia";
 import { useAuthStore } from "@/lib/authStore";
 import { useGuildInfo } from "@/lib/usePosts";
 import { useQueryClient } from "@tanstack/react-query";
@@ -100,6 +100,8 @@ export default function CreatePostScreen() {
 
     try {
       let mediaUrl: string | null = null;
+      let thumbnailUrl: string | null = null;
+      const mediaType = image?.type === "video" ? "video" : "image";
 
       if (image) {
         const mimeType = image.mimeType ?? "image/jpeg";
@@ -116,6 +118,10 @@ export default function CreatePostScreen() {
           (pct) => setUploadPct(pct),
         );
         mediaUrl = url;
+        thumbnailUrl =
+          mediaType === "video"
+            ? await generateAndUploadThumbnail(profile.id, image.uri)
+            : url;
         console.log("[Upload] SUCCESS → url:", url);
       }
 
@@ -123,7 +129,8 @@ export default function CreatePostScreen() {
         author_id: profile.id,
         caption: caption.trim() || null,
         media_url: mediaUrl,
-        media_type: image?.type === "video" ? "video" : "image",
+        media_type: mediaType,
+        thumbnail_url: thumbnailUrl,
         tags: selectedTags.map((t) => t.toLowerCase()),
         is_guild_post: false,
         guild_id: profile.guild_id,

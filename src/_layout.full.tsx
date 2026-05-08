@@ -9,7 +9,7 @@
  *  - EVERYTHING else: lazy require() with string literals inside component bodies.
  *    This avoids ANY module-init-time failure (tanstack-query, zustand, supabase, etc.)
  */
-/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-require-imports */
 import { useEffect, useRef, useState } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 

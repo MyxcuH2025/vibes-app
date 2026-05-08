@@ -1,7 +1,7 @@
 import { View, Text, Pressable, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Grid3X3, Bookmark, Edit3, Timer, Zap, Shield } from 'lucide-react-native';
-import * as Haptics from 'expo-haptics';
+import { impactAsync, ImpactFeedbackStyle } from 'expo-haptics';
 import type { Profile } from '@/lib/authStore';
 import { VibeScoreRing } from './VibeScoreRing';
 import { StatKachel } from './StatKachel';
@@ -129,7 +129,7 @@ export function ProfileListHeader({
             <Pressable
               key={tab}
               onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                impactAsync(ImpactFeedbackStyle.Light);
                 onTabChange(tab);
               }}
               style={[s.tabBtn, active && { borderBottomColor: accent }]}
