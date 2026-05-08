@@ -11,7 +11,12 @@ import Animated, {
   withSequence, runOnJS, Easing,
 } from 'react-native-reanimated';
 import { X, Heart, Send, Share2, UserPlus, UserCheck, Check, Copy, Flag, EyeOff, Download, Search as SearchIcon } from 'lucide-react-native';
-import * as Haptics from 'expo-haptics';
+import {
+  impactAsync,
+  notificationAsync,
+  ImpactFeedbackStyle,
+  NotificationFeedbackType,
+} from 'expo-haptics';
 import { BlurView } from 'expo-blur';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
@@ -87,7 +92,7 @@ function LikeBtn() {
   const press = () => {
     const next = !liked;
     setLiked(next);
-    Haptics.impactAsync(next ? Haptics.ImpactFeedbackStyle.Medium : Haptics.ImpactFeedbackStyle.Light);
+    impactAsync(next ? ImpactFeedbackStyle.Medium : ImpactFeedbackStyle.Light);
     scale.value = withSequence(
       withTiming(0.65, { duration: 60 }),
       withTiming(1.35, { duration: 80 }),
@@ -167,7 +172,7 @@ function InAppShareModal({
       else next.add(id);
       return next;
     });
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impactAsync(ImpactFeedbackStyle.Light);
   };
 
   const handleSendToUsers = async () => {
@@ -180,7 +185,7 @@ function InAppShareModal({
           await sendMsg({ conversationId: convId, content: `📸 Story von @${storyUsername}: ${storyLink}` });
         })
       );
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      notificationAsync(NotificationFeedbackType.Success);
       setSelected(new Set());
       setSearch('');
       onClose();
@@ -192,7 +197,7 @@ function InAppShareModal({
   };
 
   const handleAppShare = (id: string) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impactAsync(ImpactFeedbackStyle.Light);
     switch (id) {
       case 'whatsapp':
         Linking.openURL(`whatsapp://send?text=${encodeURIComponent(`📸 Story von @${storyUsername} auf Vibes: ${storyLink}`)}`).catch(() => Alert.alert('WhatsApp nicht installiert'));
@@ -211,7 +216,7 @@ function InAppShareModal({
   };
 
   const handleAction = (id: string) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    impactAsync(ImpactFeedbackStyle.Medium);
     onClose();
     switch (id) {
       case 'report':
@@ -429,7 +434,7 @@ export function StoryViewer({ group, allGroups, visible, onClose, onNextGroup, o
       const convId = await getOrCreateConv(currentStory.user_id);
       await sendMsg({ conversationId: convId, content: `📖 Story-Antwort: ${text}` });
       setReplyText('');
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      notificationAsync(NotificationFeedbackType.Success);
     } catch {
       Alert.alert('Fehler', 'Nachricht konnte nicht gesendet werden.');
     }
@@ -489,7 +494,7 @@ export function StoryViewer({ group, allGroups, visible, onClose, onNextGroup, o
 
         {!isOwnStory && !isOwnProfile && (
           <Pressable
-            onPress={() => { toggleFollow(); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); }}
+            onPress={() => { toggleFollow(); impactAsync(ImpactFeedbackStyle.Light); }}
             style={[styles.followBtn, isFollowing && styles.followBtnActive]}
             hitSlop={8}
           >

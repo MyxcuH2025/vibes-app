@@ -79,6 +79,7 @@
           }
         }
       ],
+      "./plugins/withFmtConstevalFix",
       "./plugins/withRootViewBackground",
       "@livekit/react-native-expo-plugin"
     ],

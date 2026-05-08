@@ -6,7 +6,7 @@ import {
   EyeOff,
   Flag,
 } from 'lucide-react-native';
-import * as Haptics from 'expo-haptics';
+import { impactAsync, ImpactFeedbackStyle } from 'expo-haptics';
 import { useReport } from '@/lib/useReport';
 import { postOptionsModalStyles as pos } from './feedStyles';
 
@@ -71,7 +71,7 @@ export function PostOptionsModal({
   const { mutate: reportPost } = useReport();
 
   const handlePress = (id: string) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impactAsync(ImpactFeedbackStyle.Light);
     onClose();
     switch (id) {
       case 'tune':

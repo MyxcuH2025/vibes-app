@@ -6,7 +6,7 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, Send } from 'lucide-react-native';
-import * as Haptics from 'expo-haptics';
+import { impactAsync, ImpactFeedbackStyle } from 'expo-haptics';
 import { useMessages, useSendMessage, useMarkMessagesRead, type Message } from '@/lib/useMessages';
 import { useAuthStore } from '@/lib/authStore';
 
@@ -76,7 +76,7 @@ export default function ChatScreen() {
     if (!text.trim() || !conversationId || sending) return;
     const content = text.trim();
     setText('');
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impactAsync(ImpactFeedbackStyle.Light);
     await sendMessage({ conversationId, content });
   }, [text, conversationId, sending, sendMessage]);
 

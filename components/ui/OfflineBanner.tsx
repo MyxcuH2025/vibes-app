@@ -9,15 +9,14 @@ import {
   withSpring,
   // Animated object (View etc.) accessed via named import of the default export value
 } from 'react-native-reanimated';
-// Animated.View component: get it from the module directly via require to avoid default interop
-/* eslint-disable @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any */
-const _ra = require('react-native-reanimated') as any;
-const AnimatedView = (_ra?.default ?? _ra)?.View ?? View;
-
-/* eslint-enable @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any */
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { WifiOff } from 'lucide-react-native';
 import { useNetworkStatus } from '@/lib/useNetworkStatus';
+
+// Animated.View component: get it from the module directly via require to avoid default interop
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const _ra = require('react-native-reanimated') as any;
+const AnimatedView = (_ra?.default ?? _ra)?.View ?? View;
 
 /**
  * Schiebt sich von oben ins Bild wenn kein Internet vorhanden ist.

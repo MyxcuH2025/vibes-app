@@ -5,11 +5,13 @@ const config = getDefaultConfig(__dirname);
 
 // ─── Build-Modus-Erkennung ───────────────────────────────────────────────────
 // EAS_BUILD=1 wird in eas.json für preview + production gesetzt.
-// Im Expo Go (kein EAS) sind alle Stubs aktiv um Crashes zu verhindern.
-// Im EAS Build sind nur die permanenten Stubs aktiv (CJS/ESM Fixes).
+// EXPO_NATIVE_BUILD=1 setzen unsere lokalen run:* Scripts für Dev-Clients.
+// Nur im echten Expo Go bleiben alle Stubs aktiv um Crashes zu verhindern.
+// In EAS + lokalem Dev-Client sind nur die permanenten Stubs aktiv.
 const IS_EAS_BUILD = process.env.EAS_BUILD === '1';
+const USE_NATIVE_MODULES = IS_EAS_BUILD || process.env.EXPO_NATIVE_BUILD === '1';
 
-console.log(`[metro] Build-Modus: ${IS_EAS_BUILD ? '🏗️  EAS BUILD (native Module aktiv)' : '📱 Expo Go (Stubs aktiv)'}`);
+console.log(`[metro] Build-Modus: ${USE_NATIVE_MODULES ? '🏗️  Native Module aktiv' : '📱 Expo Go (Stubs aktiv)'}`);
 
 // ─── Permanente Stubs (immer aktiv — lösen CJS/ESM-Hazards) ─────────────────
 const ALWAYS_STUBS = {
@@ -44,7 +46,7 @@ const EXPO_GO_STUBS = {
 };
 
 // Aktive Stubs basierend auf Build-Modus
-const STUBS = IS_EAS_BUILD
+const STUBS = USE_NATIVE_MODULES
   ? ALWAYS_STUBS
   : { ...ALWAYS_STUBS, ...EXPO_GO_STUBS };
 

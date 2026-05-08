@@ -1,8 +1,9 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
+import { View, Text, Pressable, StyleSheet } from 'react-native';
+
 // CRITICAL: `import React from 'react'` → _interopRequireDefault → TypeError in Hermes HBC.
 // Use require() to avoid the interop wrapper for React default import.
 const React = require('react') as typeof import('react');
-import { View, Text, Pressable, StyleSheet } from 'react-native';
 // expo-router `router` and lucide icons loaded lazily inside methods to avoid factory throws.
 
 interface State {
@@ -26,7 +27,6 @@ export class ErrorBoundary extends React.Component<React.PropsWithChildren, Stat
     console.error('[ErrorBoundary] Fehler:', error.message, info.componentStack);
     // Hide splash so user isn't stuck on black screen
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (require('expo-splash-screen') as any).hideAsync?.().catch(() => {});
     } catch { /* ignore */ }
     // Store componentStack for display
@@ -36,7 +36,6 @@ export class ErrorBoundary extends React.Component<React.PropsWithChildren, Stat
   handleReset = () => {
     this.setState({ hasError: false, error: undefined });
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (require('expo-router') as any).router?.replace('/(tabs)');
     } catch { /* navigation not possible */ }
   };

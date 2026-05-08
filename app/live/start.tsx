@@ -26,7 +26,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useLiveHost } from '@/lib/useLiveSession';
 // expo-constants: default import causes _interopRequireDefault TypeError in Hermes HBC
-// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const _cMod = require('expo-constants') as any; const Constants = _cMod?.default ?? _cMod;
 
 export default function LiveStartScreen() {

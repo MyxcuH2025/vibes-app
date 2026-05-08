@@ -6,7 +6,7 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ArrowLeft, Check, X } from 'lucide-react-native';
-import * as Haptics from 'expo-haptics';
+import { impactAsync, ImpactFeedbackStyle } from 'expo-haptics';
 import { supabase } from '@/lib/supabase';
 import { useUpdatePost } from '@/lib/usePostManagement';
 
@@ -48,7 +48,7 @@ export default function EditPostScreen() {
   }, [id]);
 
   const toggleTag = (tag: string) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impactAsync(ImpactFeedbackStyle.Light);
     setTags((prev) =>
       prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
     );
@@ -56,7 +56,7 @@ export default function EditPostScreen() {
 
   const handleSave = async () => {
     if (!id) return;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    impactAsync(ImpactFeedbackStyle.Medium);
     try {
       await updatePost({ postId: id, caption: caption.trim(), tags });
       router.back();

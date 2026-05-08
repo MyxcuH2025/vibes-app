@@ -25,7 +25,12 @@ import {
   Check,
 } from 'lucide-react-native';
 import { useQuery } from '@tanstack/react-query';
-import * as Haptics from 'expo-haptics';
+import {
+  impactAsync,
+  notificationAsync,
+  ImpactFeedbackStyle,
+  NotificationFeedbackType,
+} from 'expo-haptics';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/authStore';
 import { useOrCreateConversation, useSendMessage } from '@/lib/useMessages';
@@ -96,7 +101,7 @@ export function PostShareModal({
       else n.add(id);
       return n;
     });
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impactAsync(ImpactFeedbackStyle.Light);
   };
 
   const handleSendToUsers = async () => {
@@ -113,7 +118,7 @@ export function PostShareModal({
           });
         })
       );
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      notificationAsync(NotificationFeedbackType.Success);
       setSelected(new Set());
       setSearch('');
       onClose();
@@ -125,7 +130,7 @@ export function PostShareModal({
   };
 
   const handleAppShare = (id: string) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    impactAsync(ImpactFeedbackStyle.Light);
     const text = postCaption ? `"${postCaption}" von @${postAuthor} auf Vibes` : `Post von @${postAuthor} auf Vibes`;
     switch (id) {
       case 'whatsapp':
@@ -169,7 +174,7 @@ export function PostShareModal({
   const { mutate: reportPost } = useReport();
 
   const handleAction = (id: string) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    impactAsync(ImpactFeedbackStyle.Medium);
     onClose();
     switch (id) {
       case 'follow':

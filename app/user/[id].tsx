@@ -29,7 +29,7 @@ import {
   Grid3X3,
   Share2,
 } from 'lucide-react-native';
-import * as Haptics from 'expo-haptics';
+import { impactAsync, ImpactFeedbackStyle } from 'expo-haptics';
 import { supabase } from '@/lib/supabase';
 import { useFollow, useFollowCounts } from '@/lib/useFollow';
 import { useAuthStore } from '@/lib/authStore';
@@ -147,7 +147,7 @@ export default function UserProfileScreen() {
   };
 
   const handleFollow = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    impactAsync(ImpactFeedbackStyle.Medium);
     followScale.value = withSpring(0.91, { damping: 8 }, () => {
       followScale.value = withSpring(1, { damping: 12 });
     });
@@ -287,7 +287,7 @@ export default function UserProfileScreen() {
             </Pressable>
 
             <Pressable
-              onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+              onPress={() => impactAsync(ImpactFeedbackStyle.Light)}
               style={s.iconBtn}
             >
               <Share2 size={18} color="rgba(255,255,255,0.5)" strokeWidth={2} />

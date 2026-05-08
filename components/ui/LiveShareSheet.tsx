@@ -17,7 +17,7 @@ import {
   Share,
   Modal,
 } from 'react-native';
-import * as Clipboard from 'expo-clipboard';
+import { setStringAsync as setClipboardStringAsync } from 'expo-clipboard';
 import Animated, {
   FadeIn,
   FadeOut,
@@ -155,7 +155,7 @@ export default function LiveShareSheet({ visible, onClose, sessionId, title }: P
   }, [visible, currentUserId]);
 
   const copyLink = useCallback(async () => {
-    await Clipboard.setStringAsync(shareLink);
+    await setClipboardStringAsync(shareLink);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }, [shareLink]);

@@ -6,7 +6,12 @@ import {
   MessageCircle,
   Bookmark,
 } from 'lucide-react-native';
-import * as Haptics from 'expo-haptics';
+import {
+  impactAsync,
+  notificationAsync,
+  ImpactFeedbackStyle,
+  NotificationFeedbackType,
+} from 'expo-haptics';
 import { useCommentCount } from '@/lib/useComments';
 import { useBookmark } from '@/lib/useBookmark';
 import { feedItemStyles as styles } from './feedStyles';
@@ -31,7 +36,7 @@ export function ActionButton({
   return (
     <Pressable
       onPressIn={() => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        impactAsync(ImpactFeedbackStyle.Light);
         scale.value = withSequence(
           withTiming(0.75, { duration: 60 }),
           withTiming(1.2, { duration: 80 }),
@@ -67,7 +72,7 @@ export function CommentButton({
   return (
     <Pressable
       onPressIn={() => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        impactAsync(ImpactFeedbackStyle.Light);
         scale.value = withSequence(
           withTiming(0.75, { duration: 60 }),
           withTiming(1.2, { duration: 80 }),
@@ -91,7 +96,7 @@ export function BookmarkButton({ postId, batchBookmarked }: { postId: string; ba
   const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
 
   const handlePress = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    impactAsync(ImpactFeedbackStyle.Medium);
     scale.value = withSequence(
       withTiming(0.7, { duration: 60 }),
       withTiming(1.3, { duration: 80 }),
@@ -132,7 +137,7 @@ export function LikeButton({
   }));
 
   const handlePress = () => {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    notificationAsync(NotificationFeedbackType.Success);
     scale.value = withSequence(
       withTiming(0.7, { duration: 60 }),
       withTiming(1.3, { duration: 80 }),

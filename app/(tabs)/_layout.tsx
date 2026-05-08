@@ -5,22 +5,23 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Zap, Users, MessageCircle, User, Plus } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-// react-native-reanimated: named imports (safe for Hermes)
 import {
   useAnimatedStyle,
   useSharedValue,
   withTiming,
   withSequence,
 } from 'react-native-reanimated';
-// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any
-const _animMod = require('react-native-reanimated') as any;
-const _animNS  = _animMod?.default ?? _animMod;  // real Reanimated v3: .default; stub: direct
-const Animated = { View: _animNS?.View, Text: _animNS?.Text, FlatList: _animNS?.FlatList };
 
 // expo-haptics: named imports (safe for Hermes)
 import { impactAsync, ImpactFeedbackStyle } from 'expo-haptics';
 import { useUnreadDMCount } from '@/lib/useMessages';
 import { useUnreadCount } from '@/lib/useNotifications';
+
+// react-native-reanimated: named imports (safe for Hermes)
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const _animMod = require('react-native-reanimated') as any;
+const _animNS  = _animMod?.default ?? _animMod;  // real Reanimated v3: .default; stub: direct
+const Animated = { View: _animNS?.View, Text: _animNS?.Text, FlatList: _animNS?.FlatList };
 
 // ── Tab-Konfiguration ────────────────────────────────────────────────────────
 const TABS = [

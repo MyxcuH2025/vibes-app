@@ -17,6 +17,7 @@ import {
   Keyboard,
   ActivityIndicator,
   Alert,
+  type ViewStyle,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -34,9 +35,8 @@ import {
   LiveKitRoom,
   useTracks,
   VideoTrack,
-  TrackReferenceOrPlaceholder,
-  Track,
 } from '@livekit/react-native';
+import { Track } from 'livekit-client';
 import {
   useLiveSession,
   useLiveViewer,
@@ -48,10 +48,11 @@ import {
 } from '@/lib/useLiveSession';
 import { useAuthStore } from '@/lib/authStore';
 // expo-constants: default import causes _interopRequireDefault TypeError in Hermes HBC
-// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const _cMod = require('expo-constants') as any; const Constants = _cMod?.default ?? _cMod;
 
 const EMOJIS = ['❤️', '🔥', '👏', '😱', '💜'];
+const videoFillStyle: ViewStyle = { ...StyleSheet.absoluteFillObject };
 
 // ─── Floating Reaktions-Bubble ────────────────────────────────────────────────
 function ReactionBubble({ reaction }: { reaction: LiveReaction }) {
@@ -93,7 +94,7 @@ function CommentRow({ comment }: { comment: LiveComment }) {
 
 // ─── Remote Video (Host-Stream) ───────────────────────────────────────────────
 function RemoteVideoView({ hostAvatar }: { hostAvatar?: string | null }) {
-  const tracks = useTracks([{ source: Track.Source.Camera, withPlaceholder: true }]);
+  const tracks = useTracks([Track.Source.Camera]);
   const remoteTrack = tracks.find((t) => !t.participant?.isLocal);
 
   if (!remoteTrack) {
@@ -115,8 +116,8 @@ function RemoteVideoView({ hostAvatar }: { hostAvatar?: string | null }) {
 
   return (
     <VideoTrack
-      trackRef={remoteTrack as TrackReferenceOrPlaceholder}
-      style={StyleSheet.absoluteFill}
+      trackRef={remoteTrack}
+      style={videoFillStyle}
       objectFit="cover"
     />
   );

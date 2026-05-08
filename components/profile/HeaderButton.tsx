@@ -1,7 +1,7 @@
 import { type ElementType } from 'react';
 import { View, Text, Pressable } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
-import * as Haptics from 'expo-haptics';
+import { impactAsync, ImpactFeedbackStyle } from 'expo-haptics';
 import { profileStyles as s } from './profileStyles';
 
 export function HeaderButton({
@@ -25,7 +25,7 @@ export function HeaderButton({
         scale.value = withTiming(1, { duration: 80 });
       }}
       onPress={() => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        impactAsync(ImpactFeedbackStyle.Light);
         onPress();
       }}
     >

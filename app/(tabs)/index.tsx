@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, useMemo } from 'react';
+import { useCallback, useRef, useState, useMemo } from 'react';
 import {
   View,
   Text,
@@ -10,14 +10,7 @@ import {
   type ViewToken,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-// reanimated: CJS require() is used to avoid _interopRequireDefault crash in Hermes HBC.
-// Stub (Expo Go): module.exports = Animated  →  _animMod.View works directly
-// Real Reanimated v3: module.exports.default = Animated  →  need _animMod.default?.View
 import { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
-// eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-explicit-any
-const _animMod = require('react-native-reanimated') as any;
-const _animNS  = _animMod?.default ?? _animMod;            // default namespace or module itself
-const Animated = { View: _animNS?.View ?? _animMod?.View }; // covers both export styles
 
 // expo-haptics: 'import * as' → _interopRequireWildcard → TypeError in Hermes HBC
 import { impactAsync, ImpactFeedbackStyle } from 'expo-haptics';
@@ -36,6 +29,14 @@ import { FeedSkeleton } from '@/components/feed/FeedSkeleton';
 import { vibeFeedScreenStyles as styles } from '@/components/feed/feedStyles';
 import { FEED_VIDEO_VIEWABILITY, SCREEN_HEIGHT } from '@/components/feed/feedConstants';
 import type { FeedItemData } from '@/components/feed/types';
+
+// reanimated: CJS require() is used to avoid _interopRequireDefault crash in Hermes HBC.
+// Stub (Expo Go): module.exports = Animated  →  _animMod.View works directly
+// Real Reanimated v3: module.exports.default = Animated  →  need _animMod.default?.View
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const _animMod = require('react-native-reanimated') as any;
+const _animNS  = _animMod?.default ?? _animMod;            // default namespace or module itself
+const Animated = { View: _animNS?.View ?? _animMod?.View }; // covers both export styles
 
 
 export default function VibeFeedScreen() {
