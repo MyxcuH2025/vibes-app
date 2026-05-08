@@ -48,6 +48,17 @@ export function useTrendingTags() {
   return useQuery<string[]>({
     queryKey: ['trending-tags'],
     queryFn: async () => {
+      const { data: rpcTags, error: rpcError } = await supabase.rpc('get_trending_hashtags', {
+        result_limit: 12,
+      });
+
+      if (!rpcError && Array.isArray(rpcTags) && rpcTags.length > 0) {
+        return rpcTags
+          .map((row: any) => String(row.tag ?? '').trim())
+          .filter(Boolean)
+          .map((tag) => tag.charAt(0).toUpperCase() + tag.slice(1));
+      }
+
       const { data } = await supabase
         .from('posts')
         .select('tags')
