@@ -7,6 +7,7 @@ export type FeedItemData = {
   gradient: string[];
   accentColor: string;
   mediaUrl?: string | null;
+  thumbnailUrl?: string | null;
   mediaType?: string;
   authorId?: string;
   avatarUrl?: string | null;

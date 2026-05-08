@@ -98,7 +98,7 @@ export function GuildCard({
             style={styles.mediaWrap}
           >
             {isVideo ? (
-              <VideoGridThumb uri={post.media_url} style={styles.mediaThumb} />
+              <VideoGridThumb uri={post.media_url} thumbnailUri={post.thumbnail_url} style={styles.mediaThumb} />
             ) : (
               <Image source={{ uri: post.media_url }} style={styles.mediaThumb} resizeMode="cover" />
             )}
@@ -160,6 +160,9 @@ export function GuildCard({
         postId={post.id}
         visible={showComments}
         onClose={() => setShowComments(false)}
+        mediaUrl={post.media_url}
+        thumbnailUrl={post.thumbnail_url}
+        mediaType={post.media_type}
       />
     </Animated.View>
   );

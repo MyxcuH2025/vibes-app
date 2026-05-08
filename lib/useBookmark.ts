@@ -96,6 +96,7 @@ export type BookmarkedPost = {
   id: string;
   caption: string | null;
   media_url: string | null;
+  thumbnail_url: string | null;
   media_type: string;
   created_at: string;
 };
@@ -109,7 +110,7 @@ export function useBookmarkedPosts() {
       if (!userId) return [];
       const { data, error } = await supabase
         .from('bookmarks')
-        .select('post_id, posts(id, caption, media_url, media_type, created_at)')
+        .select('post_id, posts(id, caption, media_url, thumbnail_url, media_type, created_at)')
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
       if (error) throw error;

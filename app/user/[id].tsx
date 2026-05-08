@@ -60,6 +60,7 @@ type PublicProfile = {
 type PostThumb = {
   id: string;
   media_url: string | null;
+  thumbnail_url: string | null;
   media_type: string;
   caption: string | null;
   dwell_time_score?: number;
@@ -114,7 +115,7 @@ export default function UserProfileScreen() {
         .single(),
       supabase
         .from('posts')
-        .select('id, media_url, media_type, caption, dwell_time_score')
+        .select('id, media_url, thumbnail_url, media_type, caption, dwell_time_score')
         .eq('author_id', id)
         .order('created_at', { ascending: false })
         .limit(30),
@@ -345,7 +346,11 @@ export default function UserProfileScreen() {
           >
             {item.media_url ? (
               item.media_type === 'video' ? (
-                <VideoGridThumb uri={item.media_url} style={StyleSheet.absoluteFill} />
+                <VideoGridThumb
+                  uri={item.media_url}
+                  thumbnailUri={item.thumbnail_url}
+                  style={StyleSheet.absoluteFill}
+                />
               ) : (
                 <Image
                   source={{ uri: item.media_url }}

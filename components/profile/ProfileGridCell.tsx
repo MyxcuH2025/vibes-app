@@ -36,7 +36,7 @@ export function ProfileGridCell({
     >
       <Animated.View style={[StyleSheet.absoluteFill, animStyle]}>
         {!showFallback && post.media_type === 'video' && (
-          <VideoGridThumb uri={post.media_url!} style={s.cellImg} />
+          <VideoGridThumb uri={post.media_url!} thumbnailUri={post.thumbnail_url} style={s.cellImg} />
         )}
         {!showFallback && post.media_type !== 'video' && (
           <Image
@@ -58,4 +58,3 @@ export function ProfileGridCell({
     </Pressable>
   );
 }
-

@@ -5,6 +5,7 @@ export type LeaderboardPost = {
   id: string;
   caption: string | null;
   media_url: string;
+  thumbnail_url: string | null;
   media_type: string;
   dwell_time_score: number;
   avg_seconds: number;

@@ -67,6 +67,7 @@ type Props = {
   visible: boolean;
   onClose: () => void;
   mediaUrl?: string | null;
+  thumbnailUrl?: string | null;
   mediaType?: string;
 };
 
@@ -74,7 +75,7 @@ const CLOSE_DURATION = 300;
 const OPEN_DURATION = 250;
 const CLOSE_EASING = Easing.out(Easing.cubic);
 
-export default function CommentsSheet({ postId, visible, onClose, mediaUrl, mediaType }: Props) {
+export default function CommentsSheet({ postId, visible, onClose, mediaUrl, thumbnailUrl, mediaType }: Props) {
   const translateY = useSharedValue(SCREEN_HEIGHT);
   const overlayOpacity = useSharedValue(0);
   const contentOpacity = useSharedValue(0);
@@ -147,7 +148,7 @@ export default function CommentsSheet({ postId, visible, onClose, mediaUrl, medi
           {mediaUrl && (
             <View style={styles.postPreviewFrame} pointerEvents="none">
               {mediaType === 'video' ? (
-                <VideoGridThumb uri={mediaUrl} style={StyleSheet.absoluteFill} />
+                <VideoGridThumb uri={mediaUrl} thumbnailUri={thumbnailUrl} style={StyleSheet.absoluteFill} />
               ) : (
                 <Image source={{ uri: mediaUrl }} style={StyleSheet.absoluteFill} resizeMode="cover" />
               )}

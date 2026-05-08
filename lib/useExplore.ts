@@ -21,6 +21,7 @@ export type ExploreSortMode = 'forYou' | 'trending' | 'newest';
 export type ExplorePostThumb = {
   id: string;
   media_url: string | null;
+  thumbnail_url: string | null;
   media_type: string;
   caption: string | null;
 };
@@ -77,9 +78,28 @@ export function useExploreGrid(tag: string | null, sortMode: ExploreSortMode) {
   return useQuery<ExplorePostThumb[]>({
     queryKey: ['explore-grid', tag, sortMode],
     queryFn: async () => {
+      if (!tag && sortMode !== 'forYou') {
+        const sortKey = sortMode === 'newest' ? 'newest' : 'trending';
+        const { data: rpcData, error: rpcError } = await supabase.rpc('get_public_explore_feed_web', {
+          result_limit: 60,
+          result_offset: 0,
+          sort_key: sortKey,
+        });
+
+        if (!rpcError && Array.isArray(rpcData)) {
+          return rpcData.map((row: any) => ({
+            id: String(row.id),
+            media_url: row.video_url || null,
+            thumbnail_url: row.thumbnail_url ?? null,
+            media_type: row.media_type ?? 'image',
+            caption: row.caption ?? null,
+          })) as ExplorePostThumb[];
+        }
+      }
+
       let q = supabase
         .from('posts')
-        .select('id, media_url, media_type, caption, dwell_time_score, created_at')
+        .select('id, media_url, thumbnail_url, media_type, caption, dwell_time_score, created_at')
         .not('media_url', 'is', null)
         .limit(60);
 
@@ -124,7 +144,7 @@ export function useExplorePostSearch(query: string) {
       if (!query.trim()) return [];
       const { data, error } = await supabase
         .from('posts')
-        .select('id, media_url, media_type, caption')
+        .select('id, media_url, thumbnail_url, media_type, caption')
         .ilike('caption', `%${query.trim()}%`)
         .not('media_url', 'is', null)
         .limit(30);

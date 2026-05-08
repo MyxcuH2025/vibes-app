@@ -151,6 +151,14 @@ export const FeedItem = React.memo(function FeedItem({
           end={{ x: 0.7, y: 1 }}
         />
       )}
+      {item.mediaUrl && isVideo && item.thumbnailUrl && (
+        <RNImage
+          source={{ uri: item.thumbnailUrl }}
+          style={StyleSheet.absoluteFill}
+          resizeMode="cover"
+          blurRadius={1}
+        />
+      )}
 
       <Pressable style={StyleSheet.absoluteFill} onPress={handleVideoTap}>
         {item.mediaUrl && isVideo && (
@@ -221,6 +229,7 @@ export const FeedItem = React.memo(function FeedItem({
         visible={commentsOpen}
         onClose={() => setCommentsOpen(false)}
         mediaUrl={item.mediaUrl}
+        thumbnailUrl={item.thumbnailUrl}
         mediaType={item.mediaType}
       />
 

@@ -34,6 +34,7 @@ export type Database = {
           author_id: string;
           caption: string | null;
           media_url: string | null;
+          thumbnail_url: string | null;
           media_type: 'image' | 'video';
           dwell_time_score: number;
           tags: string[];
@@ -46,6 +47,7 @@ export type Database = {
           author_id: string;
           caption?: string | null;
           media_url?: string | null;
+          thumbnail_url?: string | null;
           media_type?: 'image' | 'video';
           dwell_time_score?: number;
           tags?: string[];

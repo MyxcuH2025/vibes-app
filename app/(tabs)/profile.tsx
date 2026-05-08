@@ -146,6 +146,7 @@ export default function ProfileScreen() {
                       previewUrl: item.media_url ?? '',
                       previewType: item.media_type ?? 'image',
                       previewCaption: item.caption ?? '',
+                      previewThumbnailUrl: item.thumbnail_url ?? '',
                     },
                   });
                 }

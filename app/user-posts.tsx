@@ -64,6 +64,7 @@ type PostItem = {
   id: string;
   caption: string | null;
   media_url: string | null;
+  thumbnail_url: string | null;
   media_type: string;
   tags: string[];
   created_at: string;
@@ -241,15 +242,25 @@ function PostCard({
       {/* Media */}
       {item.media_url ? (
         isVideo ? (
-          <Video
-            source={{ uri: item.media_url }}
-            style={StyleSheet.absoluteFill}
-            resizeMode={ResizeMode.COVER}
-            isLooping
-            shouldPlay={isVisible}
-            isMuted={isMuted}
-            onPlaybackStatusUpdate={handlePlaybackStatus}
-          />
+          <>
+            {item.thumbnail_url ? (
+              <Image
+                source={{ uri: item.thumbnail_url }}
+                style={StyleSheet.absoluteFill}
+                resizeMode="cover"
+                blurRadius={1}
+              />
+            ) : null}
+            <Video
+              source={{ uri: item.media_url }}
+              style={StyleSheet.absoluteFill}
+              resizeMode={ResizeMode.COVER}
+              isLooping
+              shouldPlay={isVisible}
+              isMuted={isMuted}
+              onPlaybackStatusUpdate={handlePlaybackStatus}
+            />
+          </>
         ) : (
           <Image source={{ uri: item.media_url }} style={StyleSheet.absoluteFill} resizeMode="cover" />
         )
@@ -378,7 +389,7 @@ export default function UserPostsScreen() {
     if (!userId) return;
     supabase
       .from('posts')
-      .select('id, caption, media_url, media_type, tags, created_at, author_id, view_count, profiles!author_id(username, avatar_url)')
+      .select('id, caption, media_url, thumbnail_url, media_type, tags, created_at, author_id, view_count, profiles!author_id(username, avatar_url)')
       .eq('author_id', userId)
       .order('created_at', { ascending: false })
       .then(({ data }) => {
@@ -386,6 +397,7 @@ export default function UserPostsScreen() {
           id:         p.id,
           caption:    p.caption,
           media_url:  p.media_url,
+          thumbnail_url: p.thumbnail_url,
           media_type: p.media_type,
           tags:       p.tags ?? [],
           created_at: p.created_at,
@@ -434,6 +446,7 @@ export default function UserPostsScreen() {
   }
 
   const currentPostId = posts[visibleIndex]?.id ?? '';
+  const commentsPost = commentsPostId ? posts.find((p) => p.id === commentsPostId) : null;
 
   return (
     <KeyboardAvoidingView
@@ -519,6 +532,9 @@ export default function UserPostsScreen() {
           postId={commentsPostId}
           visible
           onClose={() => setCommentsPostId(null)}
+          mediaUrl={commentsPost?.media_url}
+          thumbnailUrl={commentsPost?.thumbnail_url}
+          mediaType={commentsPost?.media_type}
         />
       )}
     </KeyboardAvoidingView>

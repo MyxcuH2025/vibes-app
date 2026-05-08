@@ -30,7 +30,7 @@ export function useNotifications() {
         .select(`
           id, type, read, created_at, comment_text, post_id,
           sender:sender_id ( id, username, avatar_url ),
-          post:post_id ( media_url )
+          post:post_id ( media_url, thumbnail_url )
         `)
         .eq('recipient_id', userId)
         .order('created_at', { ascending: false })
@@ -46,7 +46,7 @@ export function useNotifications() {
         comment_text: n.comment_text ?? null,
         post_id: n.post_id ?? null,
         sender: n.sender ?? null,
-        post_thumb: n.post?.media_url ?? null,
+        post_thumb: n.post?.thumbnail_url ?? n.post?.media_url ?? null,
       }));
     },
     enabled: !!userId,

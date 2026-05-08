@@ -182,6 +182,7 @@ export default function VibeFeedScreen() {
         tag: p.tags?.[0] ?? 'Vibe',
         tags: (p.tags ?? []).slice(0, 4),
         mediaUrl: p.media_url ?? null,
+        thumbnailUrl: p.thumbnail_url ?? null,
         mediaType: p.media_type ?? 'image',
         authorId: p.author_id,
         avatarUrl: p.avatar_url ?? null,

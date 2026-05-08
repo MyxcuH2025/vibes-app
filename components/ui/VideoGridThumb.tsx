@@ -19,23 +19,70 @@ function setCache(key: string, value: string) {
   }
 }
 
-export function VideoGridThumb({ uri, style }: { uri: string; style?: object }) {
-  const [thumb, setThumb] = useState<string | null>(thumbCache.get(uri) ?? null);
+function deleteCache(key: string) {
+  thumbCache.delete(key);
+  const idx = cacheOrder.indexOf(key);
+  if (idx >= 0) cacheOrder.splice(idx, 1);
+}
+
+export function VideoGridThumb({
+  uri,
+  thumbnailUri,
+  style,
+}: {
+  uri: string;
+  thumbnailUri?: string | null;
+  style?: object;
+}) {
+  const [ignoreRemoteThumb, setIgnoreRemoteThumb] = useState(false);
+  const remoteThumb = ignoreRemoteThumb ? null : thumbnailUri;
+  const [thumb, setThumb] = useState<string | null>(remoteThumb ?? thumbCache.get(uri) ?? null);
 
   useEffect(() => {
-    if (thumbCache.has(uri)) return;
+    setIgnoreRemoteThumb(false);
+  }, [thumbnailUri, uri]);
+
+  useEffect(() => {
+    if (remoteThumb) {
+      setCache(uri, remoteThumb);
+      setThumb(remoteThumb);
+      return;
+    }
+
+    const cached = thumbCache.get(uri);
+    if (cached) {
+      setThumb(cached);
+      return;
+    }
+
+    let mounted = true;
+    setThumb(null);
     VideoThumbnails.getThumbnailAsync(uri, { time: 1000 })
       .then((r) => {
+        if (!mounted) return;
         setCache(uri, r.uri);
         setThumb(r.uri);
       })
       .catch(() => {});
-  }, [uri]);
+    return () => {
+      mounted = false;
+    };
+  }, [remoteThumb, uri]);
 
   return (
     <View style={[styles.container, style]}>
       {thumb ? (
-        <Image source={{ uri: thumb }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+        <Image
+          source={{ uri: thumb }}
+          style={StyleSheet.absoluteFill}
+          resizeMode="cover"
+          onError={() => {
+            if (remoteThumb && thumb === remoteThumb) {
+              deleteCache(uri);
+              setIgnoreRemoteThumb(true);
+            }
+          }}
+        />
       ) : (
         <View style={styles.loading}>
           <ActivityIndicator size="small" color="#4B5563" />

@@ -71,6 +71,7 @@ function TopPostCard({
             {post.media_type === 'video' ? (
               <VideoGridThumb
                 uri={post.media_url}
+                thumbnailUri={post.thumbnail_url}
                 style={{ width: 72, height: 96, borderRadius: 12 }}
               />
             ) : (

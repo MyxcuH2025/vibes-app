@@ -31,6 +31,7 @@ type PostDetail = {
   id: string;
   caption: string | null;
   media_url: string | null;
+  thumbnail_url: string | null;
   media_type: string;
   tags: string[];
   created_at: string;
@@ -109,11 +110,12 @@ function CommentButtonDetail({ postId, onPress }: { postId: string; onPress: () 
 }
 
 export default function PostDetailScreen() {
-  const { id, previewUrl, previewType, previewCaption } = useLocalSearchParams<{
+  const { id, previewUrl, previewType, previewCaption, previewThumbnailUrl } = useLocalSearchParams<{
     id: string;
     previewUrl?: string;
     previewType?: string;
     previewCaption?: string;
+    previewThumbnailUrl?: string;
   }>();
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -141,7 +143,7 @@ export default function PostDetailScreen() {
         // Post laden — ohne Join, um Foreign-Key-Probleme zu vermeiden
         const { data: postData, error: postErr } = await supabase
           .from('posts')
-          .select('id, caption, media_url, media_type, tags, created_at, author_id')
+          .select('id, caption, media_url, thumbnail_url, media_type, tags, created_at, author_id')
           .eq('id', id)
           .single();
 
@@ -212,6 +214,7 @@ export default function PostDetailScreen() {
 
   // Daten: entweder aus DB (post) oder aus Preview-Params
   const displayMediaUrl    = post?.media_url    ?? previewUrl    ?? null;
+  const displayThumbnailUrl = post?.thumbnail_url ?? previewThumbnailUrl ?? null;
   const displayMediaType   = post?.media_type   ?? previewType   ?? 'image';
   const displayCaption     = post?.caption      ?? previewCaption ?? null;
   const displayAuthorId    = post?.author_id    ?? null;
@@ -229,14 +232,24 @@ export default function PostDetailScreen() {
       {/* Hintergrund */}
       {displayMediaUrl ? (
         displayMediaType === 'video' ? (
-          <Video
-            source={{ uri: displayMediaUrl }}
-            style={StyleSheet.absoluteFill}
-            resizeMode={ResizeMode.COVER}
-            isLooping
-            shouldPlay={screenFocused}
-            isMuted={isMuted}
-          />
+          <>
+            {displayThumbnailUrl ? (
+              <Image
+                source={{ uri: displayThumbnailUrl }}
+                style={StyleSheet.absoluteFill}
+                resizeMode="cover"
+                blurRadius={1}
+              />
+            ) : null}
+            <Video
+              source={{ uri: displayMediaUrl }}
+              style={StyleSheet.absoluteFill}
+              resizeMode={ResizeMode.COVER}
+              isLooping
+              shouldPlay={screenFocused}
+              isMuted={isMuted}
+            />
+          </>
         ) : (
           <>
             <Image
@@ -323,6 +336,9 @@ export default function PostDetailScreen() {
             postId={post.id}
             visible={commentsOpen}
             onClose={() => setCommentsOpen(false)}
+            mediaUrl={displayMediaUrl}
+            thumbnailUrl={displayThumbnailUrl}
+            mediaType={displayMediaType}
           />
         </>
       )}

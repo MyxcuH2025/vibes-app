@@ -6,6 +6,7 @@ export type PostWithAuthor = {
   id: string;
   caption: string | null;
   media_url: string | null;
+  thumbnail_url: string | null;
   media_type: string;
   dwell_time_score: number;
   score_explore: number;
@@ -55,7 +56,7 @@ export function useVibeFeed(activeTag: string | null = null) {
       const query = supabase
         .from('posts')
         .select(`
-          id, author_id, caption, media_url, media_type,
+          id, author_id, caption, media_url, thumbnail_url, media_type,
           dwell_time_score, score_explore, score_brain,
           tags, guild_id, is_guild_post, created_at,
           profiles!author_id (username, avatar_url)
@@ -89,6 +90,7 @@ export type GuildPost = {
   author_id: string;
   caption: string | null;
   media_url: string | null;
+  thumbnail_url: string | null;
   media_type: string;
   tags: string[];
   created_at: string;
@@ -116,6 +118,7 @@ export function useGuildFeed() {
 export type UserPost = {
   id: string;
   media_url: string | null;
+  thumbnail_url: string | null;
   media_type: string;
   caption: string | null;
   dwell_time_score: number;
@@ -128,7 +131,7 @@ export function useUserPosts(userId: string | null) {
       if (!userId) return [];
       const { data, error } = await supabase
         .from('posts')
-        .select('id, media_url, media_type, caption, dwell_time_score')
+        .select('id, media_url, thumbnail_url, media_type, caption, dwell_time_score')
         .eq('author_id', userId)
         .order('created_at', { ascending: false });
       if (error) throw error;
