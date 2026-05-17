@@ -22,6 +22,15 @@ const corsHeaders = {
 type DeleteRequest = {
   keys?: string[];
   urls?: string[];
+  processQueue?: boolean;
+  limit?: number;
+};
+
+type QueueRow = {
+  id: string;
+  media_url: string | null;
+  thumbnail_url: string | null;
+  attempts: number;
 };
 
 const ALLOWED_ROOTS = new Set(['posts', 'thumbnails', 'avatars']);
@@ -155,6 +164,35 @@ function isAdminCleanup(req: Request): boolean {
   return !!cleanupSecret && req.headers.get('x-cleanup-secret') === cleanupSecret;
 }
 
+function serviceHeaders(): HeadersInit {
+  const serviceRoleKey = env('SUPABASE_SERVICE_ROLE_KEY');
+  return {
+    'Authorization': `Bearer ${serviceRoleKey}`,
+    'apikey': serviceRoleKey,
+    'Content-Type': 'application/json',
+  };
+}
+
+async function updateQueueRow(
+  id: string,
+  body: Record<string, unknown>,
+): Promise<void> {
+  const supabaseUrl = env('SUPABASE_URL');
+  const response = await fetch(`${supabaseUrl}/rest/v1/r2_delete_queue?id=eq.${id}`, {
+    method: 'PATCH',
+    headers: {
+      ...serviceHeaders(),
+      'Prefer': 'return=minimal',
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!response.ok) {
+    const text = await response.text().catch(() => '');
+    throw new Error(`Queue update failed (${response.status}): ${text.substring(0, 200)}`);
+  }
+}
+
 async function deleteObject(key: string): Promise<void> {
   const accountId = env('R2_ACCOUNT_ID');
   const accessKeyId = env('R2_ACCESS_KEY_ID');
@@ -212,6 +250,61 @@ async function deleteObject(key: string): Promise<void> {
   }
 }
 
+async function processDeleteQueue(limit: number): Promise<{
+  processed: number;
+  deleted: number;
+  failed: number;
+}> {
+  const supabaseUrl = env('SUPABASE_URL');
+  const safeLimit = Math.min(Math.max(Math.trunc(limit) || 20, 1), 100);
+  const queueUrl =
+    `${supabaseUrl}/rest/v1/r2_delete_queue?` +
+    `status=eq.pending&select=id,media_url,thumbnail_url,attempts&order=created_at.asc&limit=${safeLimit}`;
+
+  const response = await fetch(queueUrl, { headers: serviceHeaders() });
+  if (!response.ok) {
+    const text = await response.text().catch(() => '');
+    throw new Error(`Queue fetch failed (${response.status}): ${text.substring(0, 200)}`);
+  }
+
+  const rows = await response.json() as QueueRow[];
+  let deleted = 0;
+  let failed = 0;
+
+  for (const row of rows) {
+    const keys = Array.from(
+      new Set(
+        [row.media_url, row.thumbnail_url]
+          .map((url) => (url ? keyFromUrl(url) : null))
+          .filter((key): key is string => !!key),
+      ),
+    );
+
+    try {
+      for (const key of keys) assertAllowedRoot(key);
+      await Promise.all(keys.map(deleteObject));
+      await updateQueueRow(row.id, {
+        status: 'deleted',
+        attempts: row.attempts + 1,
+        last_error: null,
+        processed_at: new Date().toISOString(),
+      });
+      deleted += keys.length;
+    } catch (err) {
+      failed += 1;
+      const message = err instanceof Error ? err.message : String(err);
+      await updateQueueRow(row.id, {
+        status: 'error',
+        attempts: row.attempts + 1,
+        last_error: message.substring(0, 500),
+        processed_at: new Date().toISOString(),
+      });
+    }
+  }
+
+  return { processed: rows.length, deleted, failed };
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -228,6 +321,16 @@ Deno.serve(async (req: Request) => {
     const adminCleanup = isAdminCleanup(req);
     const userId = adminCleanup ? null : await getUserId(req);
     const body = await req.json() as DeleteRequest;
+
+    if (body.processQueue) {
+      if (!adminCleanup) throw new Error('Unauthorized.');
+      const result = await processDeleteQueue(body.limit ?? 20);
+      return new Response(
+        JSON.stringify({ ok: true, ...result }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
+
     const keysFromUrls = (body.urls ?? [])
       .map(keyFromUrl)
       .filter((key): key is string => !!key);

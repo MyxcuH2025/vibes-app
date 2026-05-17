@@ -15,6 +15,8 @@ Entfernt R2-Objekte nach erfolgreicher Post-Löschung. Wird von `lib/usePostMana
 Die Function prüft User-JWTs intern und kann zusätzlich mit `x-cleanup-secret`
 für Admin-Reparaturen einzelner R2-Orphans genutzt werden. Deshalb mit
 `--no-verify-jwt` deployen.
+Wenn `r2_media_cleanup.sql` installiert ist, kann die Function mit
+`{ "processQueue": true }` gelöschte Post-Medien aus der DB-Queue abarbeiten.
 
 Benötigte Function-Secrets:
 

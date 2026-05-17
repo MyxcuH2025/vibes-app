@@ -33,6 +33,7 @@ müssen alle Schritte unten in dieser Reihenfolge ausgeführt werden.
 | 22 | `schedule_decay.sql` | pg_cron Job für Score-Decay (täglich) |
 | 23 | `push_notifications.sql` | push_tokens Tabelle + Trigger |
 | 24 | `storage.sql` | **Storage Buckets**: posts (50MB) + avatars (5MB) |
+| 25 | `r2_media_cleanup.sql` | Queue + Trigger für R2-Cleanup nach Post-Delete |
 
 ---
 
@@ -77,3 +78,13 @@ supabase functions deploy decay-scores
 
 Danach `schedule_decay.sql` ausführen um den täglichen Cron-Job zu aktivieren.
 Ohne diesen Job verfallen Scores nicht → alte Posts bleiben ewig oben im Feed.
+
+## Edge Functions (R2 Media)
+
+```bash
+supabase functions deploy r2-sign --project-ref <project-ref>
+supabase functions deploy r2-delete --project-ref <project-ref> --no-verify-jwt
+```
+
+`r2-delete` prüft User-JWTs intern und nutzt `R2_CLEANUP_SECRET` nur für Admin-Cleanup
+oder Queue-Verarbeitung.
