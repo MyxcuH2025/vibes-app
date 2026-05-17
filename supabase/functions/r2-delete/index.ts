@@ -10,6 +10,7 @@
  * - R2_SECRET_ACCESS_KEY
  * - R2_BUCKET_NAME
  * - R2_PUBLIC_URL
+ * - R2_CLEANUP_SECRET (optional; enables admin cleanup with x-cleanup-secret)
  */
 
 const corsHeaders = {
@@ -104,6 +105,21 @@ function assertAllowedKey(key: string, userId: string): void {
   if (ownerId !== userId) throw new Error('Object path does not match the current user.');
 }
 
+function assertAllowedRoot(key: string): void {
+  if (
+    !key ||
+    key.startsWith('/') ||
+    key.includes('..') ||
+    key.includes('\\') ||
+    key.length > 512
+  ) {
+    throw new Error('Invalid object key.');
+  }
+
+  const [root] = key.split('/');
+  if (!ALLOWED_ROOTS.has(root)) throw new Error('Object path is not allowed.');
+}
+
 function keyFromUrl(url: string): string | null {
   const publicBaseUrl = env('R2_PUBLIC_URL').replace(/\/+$/, '');
   if (!url.startsWith(`${publicBaseUrl}/`)) return null;
@@ -132,6 +148,11 @@ async function getUserId(req: Request): Promise<string> {
   const userId = authData?.id;
   if (typeof userId !== 'string' || !userId) throw new Error('Unauthorized.');
   return userId;
+}
+
+function isAdminCleanup(req: Request): boolean {
+  const cleanupSecret = Deno.env.get('R2_CLEANUP_SECRET');
+  return !!cleanupSecret && req.headers.get('x-cleanup-secret') === cleanupSecret;
 }
 
 async function deleteObject(key: string): Promise<void> {
@@ -204,14 +225,21 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const userId = await getUserId(req);
+    const adminCleanup = isAdminCleanup(req);
+    const userId = adminCleanup ? null : await getUserId(req);
     const body = await req.json() as DeleteRequest;
     const keysFromUrls = (body.urls ?? [])
       .map(keyFromUrl)
       .filter((key): key is string => !!key);
     const keys = Array.from(new Set([...(body.keys ?? []), ...keysFromUrls]));
 
-    for (const key of keys) assertAllowedKey(key, userId);
+    for (const key of keys) {
+      if (adminCleanup) {
+        assertAllowedRoot(key);
+      } else {
+        assertAllowedKey(key, userId!);
+      }
+    }
     await Promise.all(keys.map(deleteObject));
 
     return new Response(

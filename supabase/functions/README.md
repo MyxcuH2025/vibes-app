@@ -12,6 +12,9 @@ Erzeugt kurzlebige Cloudflare-R2-Presigned-URLs für die App-Uploads in `lib/upl
 ## `r2-delete`
 
 Entfernt R2-Objekte nach erfolgreicher Post-Löschung. Wird von `lib/usePostManagement.ts` best-effort aufgerufen.
+Die Function prüft User-JWTs intern und kann zusätzlich mit `x-cleanup-secret`
+für Admin-Reparaturen einzelner R2-Orphans genutzt werden. Deshalb mit
+`--no-verify-jwt` deployen.
 
 Benötigte Function-Secrets:
 
@@ -20,3 +23,4 @@ Benötigte Function-Secrets:
 - `R2_SECRET_ACCESS_KEY`
 - `R2_BUCKET_NAME`
 - `R2_PUBLIC_URL`
+- `R2_CLEANUP_SECRET` (für Admin-Cleanup)
