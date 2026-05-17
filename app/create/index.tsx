@@ -14,11 +14,10 @@ import {
   launchCameraAsync,
   type ImagePickerAsset,
 } from "expo-image-picker";
-import { supabase } from "@/lib/supabase";
 import { generateAndUploadThumbnail, uploadPostMedia } from "@/lib/uploadMedia";
 import { useAuthStore } from "@/lib/authStore";
 import { useGuildInfo } from "@/lib/usePosts";
-import { useQueryClient } from "@tanstack/react-query";
+import { useCreatePost } from "@/lib/usePostManagement";
 import {
   CreateProgressBar,
   CreateHeader,
@@ -33,7 +32,7 @@ export default function CreatePostScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { profile } = useAuthStore();
-  const queryClient = useQueryClient();
+  const { mutateAsync: createPost } = useCreatePost();
   const { data: guildInfo } = useGuildInfo(profile?.guild_id ?? null);
 
   const [image, setImage] = useState<ImagePickerAsset | null>(null);
@@ -118,23 +117,14 @@ export default function CreatePostScreen() {
             : url;
       }
 
-      const { error } = await supabase.from("posts").insert({
-        author_id: profile.id,
+      await createPost({
         caption: caption.trim() || null,
-        media_url: mediaUrl,
-        media_type: mediaType,
-        thumbnail_url: thumbnailUrl,
+        mediaUrl,
+        mediaType,
+        thumbnailUrl,
         tags: selectedTags.map((t) => t.toLowerCase()),
-        is_guild_post: false,
-        guild_id: profile.guild_id,
-      });
-
-      if (error) throw error;
-
-      await queryClient.invalidateQueries({ queryKey: ["vibe-feed"] });
-      await queryClient.invalidateQueries({ queryKey: ["guild-feed"] });
-      await queryClient.invalidateQueries({
-        queryKey: ["user-posts", profile.id],
+        isGuildPost: false,
+        guildId: profile.guild_id,
       });
 
       Alert.alert("🎉 Vibe gepostet!", "Dein Post ist jetzt im Feed.", [

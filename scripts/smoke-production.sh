@@ -22,6 +22,9 @@ npm run verify:r2-cleanup
 echo "R2 queue health"
 npm run health:r2-queue
 
+echo "Integrity check"
+npm run check:integrity
+
 rm -f deno.lock
 
 echo "Production smoke checks passed."

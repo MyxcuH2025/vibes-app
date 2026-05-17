@@ -49,6 +49,8 @@ Required pass criteria:
 - `r2-delete` is active.
 - `processQueue` returns `ok: true`.
 - `r2_delete_queue` has no failed rows.
+- Critical DB integrity checks pass via `npm run check:integrity`.
+- GitHub Actions `Stability Gates` is green.
 
 ## Rollback Trigger
 
@@ -59,3 +61,5 @@ Pause rollout and rollback or hotfix if any of these are true:
 - pending R2 queue rows exceed `R2_QUEUE_MAX_PENDING`.
 - Edge Function returns unexpected `4xx`/`5xx`.
 - A client implements a direct critical mutation outside the approved hook/RPC.
+- GitHub Actions cannot run production smoke because required repository secrets
+  are missing.

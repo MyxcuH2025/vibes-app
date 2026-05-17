@@ -34,6 +34,8 @@ Implemented:
 
 - `scripts/smoke-production.sh` runs TypeScript, lint, Deno Edge checks, and R2
   cleanup verification.
+- `.github/workflows/stability-gates.yml` runs app gates on PR/push and weekly
+  production smoke/integrity checks when repository secrets are configured.
 
 Verification:
 
@@ -47,14 +49,23 @@ Status: run before every deploy and after every production hotfix.
 
 Goal: Web and Mobile must not implement separate critical mutations.
 
+Implemented:
+
+- `supabase/post_mutation_rpcs.sql` defines canonical `create_post`,
+  `update_post`, and `delete_post` RPCs.
+- `lib/usePostManagement.ts` routes create, update, and delete through those
+  RPCs.
+- `scripts/audit-critical-mutations.sh` blocks direct `posts`
+  insert/update/delete outside the central hook module.
+
 Rules:
 
 - Post creation, update, delete, media cleanup, scheduled publish, and push
   side effects must use shared RPC or Edge Function entrypoints.
 - Client code may update UI state optimistically, but source-of-truth mutations
   belong server-side.
-- Any direct `from('posts').delete()` outside the approved hook/RPC path is a
-  release blocker.
+- Any direct `posts` insert/update/delete outside the approved hook/RPC path is
+  a release blocker.
 
 Verification:
 
@@ -89,7 +100,12 @@ Automated check:
 
 ```bash
 npm run health:r2-queue
+npm run check:integrity
 ```
+
+Limit: full R2 bucket orphan scanning requires Cloudflare bucket listing
+credentials in the production ops environment. The current gate verifies DB-side
+integrity and R2 delete queue health.
 
 ## Wave 5: Release Discipline
 
@@ -102,5 +118,6 @@ Release gate:
 - secrets verified without printing values
 - `npm run smoke:production` passes
 - post-release smoke result pasted into the release notes
+- GitHub Actions `Stability Gates` is green for PR/push changes.
 
 Runbook: `docs/RELEASE_GATE.md`.
