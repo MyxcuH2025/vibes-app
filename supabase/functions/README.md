@@ -17,6 +17,8 @@ für Admin-Reparaturen einzelner R2-Orphans genutzt werden. Deshalb mit
 `--no-verify-jwt` deployen.
 Wenn `r2_media_cleanup.sql` installiert ist, kann die Function mit
 `{ "processQueue": true }` gelöschte Post-Medien aus der DB-Queue abarbeiten.
+Für Produktions-Smoke-Tests gibt es zusätzlich `{ "selfTest": true }`; dieser
+Pfad ist ebenfalls nur mit `x-cleanup-secret` erlaubt.
 
 Benötigte Function-Secrets:
 

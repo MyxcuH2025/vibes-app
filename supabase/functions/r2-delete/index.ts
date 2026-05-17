@@ -23,6 +23,7 @@ type DeleteRequest = {
   keys?: string[];
   urls?: string[];
   processQueue?: boolean;
+  selfTest?: boolean;
   limit?: number;
 };
 
@@ -193,6 +194,20 @@ async function updateQueueRow(
   }
 }
 
+async function restRequest(
+  path: string,
+  init: RequestInit = {},
+): Promise<Response> {
+  const supabaseUrl = env('SUPABASE_URL');
+  return fetch(`${supabaseUrl}/rest/v1/${path}`, {
+    ...init,
+    headers: {
+      ...serviceHeaders(),
+      ...(init.headers ?? {}),
+    },
+  });
+}
+
 async function deleteObject(key: string): Promise<void> {
   const accountId = env('R2_ACCOUNT_ID');
   const accessKeyId = env('R2_ACCESS_KEY_ID');
@@ -305,6 +320,72 @@ async function processDeleteQueue(limit: number): Promise<{
   return { processed: rows.length, deleted, failed };
 }
 
+async function runSelfTest(): Promise<{
+  postDeleted: boolean;
+  queueRows: number;
+  queueProcessed: number;
+  queueFailed: number;
+}> {
+  const authorResponse = await restRequest('profiles?select=id&limit=1');
+  if (!authorResponse.ok) {
+    const text = await authorResponse.text().catch(() => '');
+    throw new Error(`Self-test author fetch failed (${authorResponse.status}): ${text.substring(0, 200)}`);
+  }
+
+  const authors = await authorResponse.json() as Array<{ id: string }>;
+  const authorId = authors[0]?.id;
+  if (!authorId) throw new Error('Self-test needs at least one profile.');
+
+  const testId = crypto.randomUUID();
+  const publicBaseUrl = env('R2_PUBLIC_URL').replace(/\/+$/, '');
+  const mediaUrl = `${publicBaseUrl}/posts/images/${authorId}/self-test-${testId}.webp`;
+
+  const postResponse = await restRequest('posts', {
+    method: 'POST',
+    headers: { 'Prefer': 'return=minimal' },
+    body: JSON.stringify({
+      id: testId,
+      author_id: authorId,
+      caption: 'r2 cleanup self-test',
+      media_url: mediaUrl,
+      thumbnail_url: mediaUrl,
+      media_type: 'image',
+    }),
+  });
+  if (!postResponse.ok) {
+    const text = await postResponse.text().catch(() => '');
+    throw new Error(`Self-test post insert failed (${postResponse.status}): ${text.substring(0, 200)}`);
+  }
+
+  const deleteResponse = await restRequest(`posts?id=eq.${testId}`, {
+    method: 'DELETE',
+    headers: { 'Prefer': 'return=minimal' },
+  });
+  if (!deleteResponse.ok) {
+    const text = await deleteResponse.text().catch(() => '');
+    await restRequest(`posts?id=eq.${testId}`, { method: 'DELETE' });
+    throw new Error(`Self-test post delete failed (${deleteResponse.status}): ${text.substring(0, 200)}`);
+  }
+
+  const queueResponse = await restRequest(
+    `r2_delete_queue?post_id=eq.${testId}&select=id,status`,
+  );
+  if (!queueResponse.ok) {
+    const text = await queueResponse.text().catch(() => '');
+    throw new Error(`Self-test queue fetch failed (${queueResponse.status}): ${text.substring(0, 200)}`);
+  }
+
+  const rows = await queueResponse.json() as Array<{ id: string; status: string }>;
+  const result = await processDeleteQueue(10);
+
+  return {
+    postDeleted: true,
+    queueRows: rows.length,
+    queueProcessed: result.processed,
+    queueFailed: result.failed,
+  };
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -325,6 +406,15 @@ Deno.serve(async (req: Request) => {
     if (body.processQueue) {
       if (!adminCleanup) throw new Error('Unauthorized.');
       const result = await processDeleteQueue(body.limit ?? 20);
+      return new Response(
+        JSON.stringify({ ok: true, ...result }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
+    }
+
+    if (body.selfTest) {
+      if (!adminCleanup) throw new Error('Unauthorized.');
+      const result = await runSelfTest();
       return new Response(
         JSON.stringify({ ok: true, ...result }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
