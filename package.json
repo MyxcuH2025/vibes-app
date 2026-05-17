@@ -10,6 +10,10 @@
     "web": "expo start --web",
     "typecheck": "tsc --noEmit",
     "lint": "expo lint --max-warnings 0",
+    "audit:mutations": "bash scripts/audit-critical-mutations.sh",
+    "health:r2-queue": "bash scripts/check-r2-queue-health.sh",
+    "verify:r2-cleanup": "bash scripts/verify-r2-cleanup.sh",
+    "smoke:production": "bash scripts/smoke-production.sh",
     "postinstall": "patch-package"
   },
   "dependencies": {
