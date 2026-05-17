@@ -17,12 +17,12 @@ import { ArrowLeft, Heart, MessageCircle, Bookmark, Share2, Trash2, Pencil, Volu
 import { Video, ResizeMode } from 'expo-av';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/authStore';
-import { useQueryClient } from '@tanstack/react-query';
 import { useLike } from '@/lib/useLike';
 import { useCommentCount } from '@/lib/useComments';
 import { useBookmark } from '@/lib/useBookmark';
 import { sharePost } from '@/lib/useShare';
 import CommentsSheet from '@/components/ui/CommentsSheet';
+import { useDeletePost } from '@/lib/usePostManagement';
 
 
 const { width: W, height: H } = Dimensions.get('window');
@@ -120,7 +120,7 @@ export default function PostDetailScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { profile } = useAuthStore();
-  const queryClient = useQueryClient();
+  const { mutateAsync: deletePost } = useDeletePost();
 
   const [post, setPost] = useState<PostDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -182,9 +182,13 @@ export default function PostDetailScreen() {
           text: 'Löschen',
           style: 'destructive',
           onPress: async () => {
-            await supabase.from('posts').delete().eq('id', id);
-            await queryClient.invalidateQueries({ queryKey: ['vibe-feed'] });
-            router.back();
+            try {
+              await deletePost(id);
+              router.back();
+            } catch (err) {
+              const message = err instanceof Error ? err.message : 'Post konnte nicht gelöscht werden.';
+              Alert.alert('Fehler', message);
+            }
           },
         },
       ]

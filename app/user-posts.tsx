@@ -46,12 +46,12 @@ import {
 import { Video, ResizeMode, type AVPlaybackStatus } from 'expo-av';
 import { supabase } from '@/lib/supabase';
 import { useAuthStore } from '@/lib/authStore';
-import { useQueryClient } from '@tanstack/react-query';
 import { useLike } from '@/lib/useLike';
 import { useCommentCount, useAddComment } from '@/lib/useComments';
 import { useBookmark } from '@/lib/useBookmark';
 import { sharePost } from '@/lib/useShare';
 import CommentsSheet from '@/components/ui/CommentsSheet';
+import { useDeletePost } from '@/lib/usePostManagement';
 
 const VIEWABILITY_CONFIG = { itemVisiblePercentThreshold: 60 };
 // Höhe der Kommentar-Leiste (paddingVertical 10*2 + Avatar 34 + Border 1 ≈ 55)
@@ -364,7 +364,7 @@ export default function UserPostsScreen() {
   const router       = useRouter();
   const insets       = useSafeAreaInsets();
   const { profile }  = useAuthStore();
-  const queryClient  = useQueryClient();
+  const { mutateAsync: deletePost } = useDeletePost();
 
   const [posts,         setPosts]         = useState<PostItem[]>([]);
   const [loading,       setLoading]       = useState(true);
@@ -418,10 +418,13 @@ export default function UserPostsScreen() {
         text: 'Löschen',
         style: 'destructive',
         onPress: async () => {
-          await supabase.from('posts').delete().eq('id', postId);
-          await queryClient.invalidateQueries({ queryKey: ['vibe-feed'] });
-          await queryClient.invalidateQueries({ queryKey: ['user-posts', userId] });
-          setPosts((prev) => prev.filter((p) => p.id !== postId));
+          try {
+            await deletePost(postId);
+            setPosts((prev) => prev.filter((p) => p.id !== postId));
+          } catch (err) {
+            const message = err instanceof Error ? err.message : 'Post konnte nicht gelöscht werden.';
+            Alert.alert('Fehler', message);
+          }
         },
       },
     ]);

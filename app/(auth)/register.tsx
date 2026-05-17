@@ -24,12 +24,18 @@ export default function RegisterScreen() {
   const router = useRouter();
 
   const handleRegister = async () => {
-    if (!email || !password || !username) {
+    const normalizedUsername = username.trim().toLowerCase().replace(/\s/g, '_');
+
+    if (!email || !password || !normalizedUsername) {
       Alert.alert('Fehler', 'Bitte alle Felder ausfüllen.');
       return;
     }
-    if (username.length < 3) {
+    if (normalizedUsername.length < 3) {
       Alert.alert('Fehler', 'Username muss mindestens 3 Zeichen lang sein.');
+      return;
+    }
+    if (!/^[a-z0-9_]+$/i.test(normalizedUsername)) {
+      Alert.alert('Fehler', 'Nur Buchstaben, Zahlen und _ im Username erlaubt.');
       return;
     }
     if (password.length < 6) {
@@ -39,41 +45,41 @@ export default function RegisterScreen() {
 
     setLoading(true);
 
-    const { data, error } = await supabase.auth.signUp({
+    const { data: existingProfile, error: profileLookupError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('username', normalizedUsername)
+      .maybeSingle();
+
+    if (profileLookupError) {
+      setLoading(false);
+      Alert.alert('Fehler', 'Username konnte nicht geprüft werden. Bitte versuche es erneut.');
+      return;
+    }
+
+    if (existingProfile) {
+      setLoading(false);
+      Alert.alert('Fehler', 'Dieser Benutzername ist bereits vergeben. Bitte wähle einen anderen.');
+      return;
+    }
+
+    const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { username },
+        data: { username: normalizedUsername },
       },
     });
 
     if (error) {
       setLoading(false);
-      Alert.alert('Registrierung fehlgeschlagen', error.message);
+      Alert.alert(
+        'Registrierung fehlgeschlagen',
+        error.message.toLowerCase().includes('database')
+          ? 'Konto konnte nicht erstellt werden. Der Username ist möglicherweise bereits vergeben.'
+          : error.message,
+      );
       return;
-    }
-
-    if (data.user) {
-      const { error: profileError } = await supabase.from('profiles').insert({
-        id: data.user.id,
-        username: username.toLowerCase().replace(/\s/g, '_'),
-        explore_vibe: 0.5,
-        brain_vibe: 0.5,
-      });
-
-      if (profileError) {
-        // Auth-User existiert, aber Profil-Insert ist fehlgeschlagen.
-        // Auth-Account löschen damit kein Zombie-User entsteht, der sich
-        // nie mehr einloggen kann (fetchProfile → null → stuck).
-        await supabase.auth.signOut();
-        setLoading(false);
-        if (profileError.code === '23505') {
-          Alert.alert('Fehler', 'Dieser Benutzername ist bereits vergeben. Bitte wähle einen anderen.');
-        } else {
-          Alert.alert('Fehler', 'Konto konnte nicht erstellt werden. Bitte versuche es erneut.');
-        }
-        return;
-      }
     }
 
     setLoading(false);

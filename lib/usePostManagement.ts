@@ -1,22 +1,46 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from './supabase';
 
+type PostMediaForDelete = {
+  author_id: string;
+  media_url: string | null;
+  thumbnail_url: string | null;
+};
+
+function uniqueUrls(urls: Array<string | null | undefined>): string[] {
+  return Array.from(new Set(urls.filter((url): url is string => !!url)));
+}
+
+async function cleanupR2Media(urls: string[]) {
+  if (urls.length === 0) return;
+
+  const { data: sessionData } = await supabase.auth.getSession();
+  const accessToken = sessionData.session?.access_token;
+  if (!accessToken) throw new Error('Nicht eingeloggt.');
+
+  const { error } = await supabase.functions.invoke('r2-delete', {
+    body: { urls },
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (error && __DEV__) {
+    console.warn('[r2-delete] cleanup failed:', error.message);
+  }
+}
+
 export function useDeletePost() {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async (postId: string) => {
-      // Zuerst Media-Pfad holen um Storage-Datei zu löschen
-      const { data: post } = await supabase
-        .from('posts')
-        .select('media_url')
-        .eq('id', postId)
-        .single();
-
-      const { error } = await supabase
+      const { data: post, error } = await supabase
         .from('posts')
         .delete()
-        .eq('id', postId);
+        .eq('id', postId)
+        .select('author_id, media_url, thumbnail_url')
+        .single();
 
       if (error) throw error;
 
@@ -30,11 +54,16 @@ export function useDeletePost() {
           await supabase.storage.from('posts').remove([bucketPath]);
         }
       }
+
+      const mediaPost = post as PostMediaForDelete | null;
+      await cleanupR2Media(uniqueUrls([mediaPost?.media_url, mediaPost?.thumbnail_url]));
     },
-    onSuccess: () => {
+    onSuccess: (_data, postId) => {
+      queryClient.invalidateQueries({ queryKey: ['post', postId] });
       queryClient.invalidateQueries({ queryKey: ['vibe-feed'] });
       queryClient.invalidateQueries({ queryKey: ['guild-feed'] });
       queryClient.invalidateQueries({ queryKey: ['user-posts'] });
+      queryClient.invalidateQueries({ queryKey: ['feed-engagement'] });
     },
   });
 }

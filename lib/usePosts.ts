@@ -48,11 +48,11 @@ export function useVibeFeed(activeTag: string | null = null) {
         filter_tag:     activeTag ?? null,
       });
 
-      if (!rpcError && Array.isArray(rpcData) && rpcData.length > 0) {
-        return rpcData as PostWithAuthor[];
+      if (!rpcError) {
+        return Array.isArray(rpcData) ? (rpcData as PostWithAuthor[]) : [];
       }
 
-      // Fallback: direkter Query wenn RPC fehlt oder leer zurückgibt
+      // Fallback: direkter Query wenn RPC fehlt oder fehlschlägt
       const query = supabase
         .from('posts')
         .select(`

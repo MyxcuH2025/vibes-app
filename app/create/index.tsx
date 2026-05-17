@@ -105,12 +105,6 @@ export default function CreatePostScreen() {
 
       if (image) {
         const mimeType = image.mimeType ?? "image/jpeg";
-        console.log(
-          "[Upload] Starting upload:",
-          image.uri,
-          "| mimeType:",
-          mimeType,
-        );
         const { url } = await uploadPostMedia(
           profile.id,
           image.uri,
@@ -122,7 +116,6 @@ export default function CreatePostScreen() {
           mediaType === "video"
             ? await generateAndUploadThumbnail(profile.id, image.uri)
             : url;
-        console.log("[Upload] SUCCESS → url:", url);
       }
 
       const { error } = await supabase.from("posts").insert({

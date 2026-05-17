@@ -6,6 +6,11 @@ import { useAuthStore } from './authStore';
 // Expo Project ID aus app.json (für getExpoPushTokenAsync in Expo SDK 54 erforderlich)
 const EXPO_PROJECT_ID = '02ab536a-5836-4560-a5ec-2dfd6e059f90';
 
+function pushPlatform(): 'ios' | 'android' | 'other' {
+  if (Platform.OS === 'ios' || Platform.OS === 'android') return Platform.OS;
+  return 'other';
+}
+
 try {
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
@@ -51,7 +56,6 @@ export function usePushNotifications() {
         }
 
         if (finalStatus !== 'granted') {
-          console.log('[PushNotif] Berechtigung nicht erteilt');
           return;
         }
 
@@ -65,14 +69,32 @@ export function usePushNotifications() {
           return;
         }
 
-        console.log('[PushNotif] Token:', token);
-        tokenRegistered.current = true;
-
-        // Direkt per REST in profiles speichern — kein Supabase-Client-Hang
         const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL!;
         const supabaseKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!;
 
-        const res = await fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${profile.id}`, {
+        const tokenRes = await fetch(`${supabaseUrl}/rest/v1/push_tokens?on_conflict=user_id,token`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': supabaseKey,
+            'Authorization': `Bearer ${session.access_token}`,
+            'Prefer': 'resolution=merge-duplicates,return=minimal',
+          },
+          body: JSON.stringify({
+            user_id: profile.id,
+            token,
+            platform: pushPlatform(),
+            last_seen_at: new Date().toISOString(),
+          }),
+        });
+
+        if (tokenRes.ok) {
+          tokenRegistered.current = true;
+          return;
+        }
+
+        // Fallback fuer Datenbanken vor push_tokens_multi_device.sql.
+        const fallbackRes = await fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${profile.id}`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -80,17 +102,22 @@ export function usePushNotifications() {
             'Authorization': `Bearer ${session.access_token}`,
             'Prefer': 'return=minimal',
           },
-          body: JSON.stringify({ push_token: token }),
+          body: JSON.stringify({ expo_push_token: token }),
         });
 
-        if (res.ok) {
-          console.log('[PushNotif] ✅ Token in DB gespeichert:', token);
+        if (fallbackRes.ok) {
+          tokenRegistered.current = true;
         } else {
-          const text = await res.text();
-          console.warn('[PushNotif] ❌ PATCH fehlgeschlagen:', res.status, text.substring(0, 150));
+          const tokenText = await tokenRes.text().catch(() => '');
+          const fallbackText = await fallbackRes.text().catch(() => '');
+          console.warn(
+            '[PushNotif] Token speichern fehlgeschlagen:',
+            `push_tokens=${tokenRes.status} ${tokenText.substring(0, 120)}`,
+            `profiles=${fallbackRes.status} ${fallbackText.substring(0, 120)}`,
+          );
         }
       } catch (err) {
-        console.log('[PushNotif] Fehler (Expo Go oder Stub):', (err as Error)?.message ?? err);
+        if (__DEV__) console.warn('[PushNotif] Fehler (Expo Go oder Stub):', (err as Error)?.message ?? err);
       }
     };
 
@@ -101,12 +128,8 @@ export function usePushNotifications() {
   useEffect(() => {
     if (Platform.OS === 'web') return;
     try {
-      notificationListener.current = Notifications.addNotificationReceivedListener((n) => {
-        console.log('[PushNotif] Eingehend:', n.request.content.title);
-      });
-      responseListener.current = Notifications.addNotificationResponseReceivedListener((r) => {
-        console.log('[PushNotif] Getippt:', r.notification.request.content.data);
-      });
+      notificationListener.current = Notifications.addNotificationReceivedListener(() => {});
+      responseListener.current = Notifications.addNotificationResponseReceivedListener(() => {});
     } catch {
       /* Expo Go stub */
     }

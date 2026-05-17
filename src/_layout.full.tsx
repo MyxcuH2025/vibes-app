@@ -11,7 +11,7 @@
  */
 /* eslint-disable @typescript-eslint/no-require-imports */
 import { useEffect, useRef, useState } from 'react';
-import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, ActivityIndicator, StyleSheet, Pressable } from 'react-native';
 
 // ─── AuthGuard ────────────────────────────────────────────────────────────────
 function AuthGuard() {
@@ -22,7 +22,7 @@ function AuthGuard() {
   const { useAuthStore } =
     require('@/lib/authStore') as typeof import('@/lib/authStore');
 
-  const { session, initialized, profile, setSession, fetchProfile } =
+  const { session, initialized, profile, profileStatus, setSession, fetchProfile } =
     useAuthStore();
   const segments = useSegments();
   const router = useRouter();
@@ -70,21 +70,17 @@ function AuthGuard() {
     const inAuthGroup = segments[0] === '(auth)';
     const inOnboardingGroup = segments[0] === '(onboarding)';
 
-    console.log(
-      '[AuthGuard] initialized:', initialized,
-      'session:', !!session,
-      'profile:', !!profile,
-      'segments:', segments,
-    );
-
     if (!session) {
       if (!inAuthGroup) router.replace('/(auth)/login' as never);
       return;
     }
-    if (!profile) {
+    if (profileStatus === 'loading' || profileStatus === 'idle') return;
+    if (profileStatus === 'error') return;
+    if (profileStatus === 'missing') {
       if (!inOnboardingGroup) router.replace('/(onboarding)' as never);
       return;
     }
+    if (!profile) return;
     if (inAuthGroup) {
       router.replace(
         !profile.onboarding_complete
@@ -97,7 +93,7 @@ function AuthGuard() {
       router.replace('/(onboarding)' as never);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session, initialized, profile, segments]);
+  }, [session, initialized, profile, profileStatus, segments]);
 
   return null;
 }
@@ -115,7 +111,32 @@ function AppSplash() {
   const { useAuthStore } =
     require('@/lib/authStore') as typeof import('@/lib/authStore');
   const initialized = useAuthStore((s) => s.initialized);
-  if (initialized) return null;
+  const session = useAuthStore((s) => s.session);
+  const profileStatus = useAuthStore((s) => s.profileStatus);
+  const profileError = useAuthStore((s) => s.profileError);
+  const fetchProfile = useAuthStore((s) => s.fetchProfile);
+  const waitingForProfile =
+    !!session && (profileStatus === 'idle' || profileStatus === 'loading');
+  const profileFailed = !!session && profileStatus === 'error';
+  if (profileFailed) {
+    return (
+      <View style={splashStyles.overlay}>
+        <Text style={splashStyles.errorTitle}>Profil konnte nicht geladen werden</Text>
+        <Text style={splashStyles.errorText}>
+          {profileError ?? 'Bitte prüfe deine Verbindung und versuche es erneut.'}
+        </Text>
+        <Pressable
+          style={splashStyles.retryButton}
+          onPress={() => {
+            if (session?.user?.id) fetchProfile(session.user.id);
+          }}
+        >
+          <Text style={splashStyles.retryText}>Erneut versuchen</Text>
+        </Pressable>
+      </View>
+    );
+  }
+  if (initialized && !waitingForProfile) return null;
   return (
     <View style={splashStyles.overlay}>
       <ActivityIndicator color="#FFFFFF" size="large" />
@@ -184,6 +205,30 @@ const splashStyles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
     fontFamily: 'monospace',
+  },
+  errorTitle: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '800',
+    textAlign: 'center',
+  },
+  errorText: {
+    color: '#EDE9FE',
+    fontSize: 13,
+    lineHeight: 19,
+    textAlign: 'center',
+    maxWidth: 300,
+  },
+  retryButton: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    paddingHorizontal: 18,
+    paddingVertical: 11,
+  },
+  retryText: {
+    color: '#4C1D95',
+    fontSize: 14,
+    fontWeight: '800',
   },
 });
 

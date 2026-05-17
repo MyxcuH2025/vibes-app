@@ -138,7 +138,6 @@ export const FeedItem = React.memo(function FeedItem({
             source={{ uri: item.mediaUrl }}
             style={StyleSheet.absoluteFill}
             resizeMode="contain"
-            onLoad={() => console.log('[Image LOADED]', item.mediaUrl)}
             onError={() => setImageError(true)}
           />
         </>
