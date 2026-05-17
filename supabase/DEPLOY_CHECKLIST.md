@@ -34,6 +34,7 @@ müssen alle Schritte unten in dieser Reihenfolge ausgeführt werden.
 | 23 | `push_notifications.sql` | push_tokens Tabelle + Trigger |
 | 24 | `storage.sql` | **Storage Buckets**: posts (50MB) + avatars (5MB) |
 | 25 | `r2_media_cleanup.sql` | Queue + Trigger für R2-Cleanup nach Post-Delete |
+| 26 | `r2_media_cleanup_cron.sql` | Cron-Job zum Abarbeiten der R2-Cleanup-Queue |
 
 ---
 

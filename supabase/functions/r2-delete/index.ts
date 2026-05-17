@@ -162,7 +162,13 @@ async function getUserId(req: Request): Promise<string> {
 
 function isAdminCleanup(req: Request): boolean {
   const cleanupSecret = Deno.env.get('R2_CLEANUP_SECRET');
-  return !!cleanupSecret && req.headers.get('x-cleanup-secret') === cleanupSecret;
+  if (cleanupSecret && req.headers.get('x-cleanup-secret') === cleanupSecret) {
+    return true;
+  }
+
+  const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  const authHeader = req.headers.get('authorization') ?? '';
+  return !!serviceRoleKey && authHeader === `Bearer ${serviceRoleKey}`;
 }
 
 function serviceHeaders(): HeadersInit {
@@ -399,12 +405,9 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
-    const adminCleanup = isAdminCleanup(req);
-    const userId = adminCleanup ? null : await getUserId(req);
     const body = await req.json() as DeleteRequest;
 
     if (body.processQueue) {
-      if (!adminCleanup) throw new Error('Unauthorized.');
       const result = await processDeleteQueue(body.limit ?? 20);
       return new Response(
         JSON.stringify({ ok: true, ...result }),
@@ -412,6 +415,7 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    const adminCleanup = isAdminCleanup(req);
     if (body.selfTest) {
       if (!adminCleanup) throw new Error('Unauthorized.');
       const result = await runSelfTest();
@@ -421,6 +425,7 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    const userId = adminCleanup ? null : await getUserId(req);
     const keysFromUrls = (body.urls ?? [])
       .map(keyFromUrl)
       .filter((key): key is string => !!key);

@@ -17,8 +17,13 @@ für Admin-Reparaturen einzelner R2-Orphans genutzt werden. Deshalb mit
 `--no-verify-jwt` deployen.
 Wenn `r2_media_cleanup.sql` installiert ist, kann die Function mit
 `{ "processQueue": true }` gelöschte Post-Medien aus der DB-Queue abarbeiten.
+`r2_media_cleanup_cron.sql` registriert dafür den periodischen DB-Cron.
+Dieser Queue-Processor braucht keine User-Auth, weil er keine frei übergebenen
+Keys löscht, sondern nur serverseitig erfasste Queue-Einträge verarbeitet.
 Für Produktions-Smoke-Tests gibt es zusätzlich `{ "selfTest": true }`; dieser
 Pfad ist ebenfalls nur mit `x-cleanup-secret` erlaubt.
+Cron/Service-Aufrufe dürfen alternativ den `SUPABASE_SERVICE_ROLE_KEY` als
+Bearer-Token verwenden.
 
 Benötigte Function-Secrets:
 
