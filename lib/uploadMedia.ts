@@ -9,8 +9,6 @@ type UploadResult = {
 
 const MAX_IMAGE_BYTES = 50 * 1024 * 1024;
 const MAX_VIDEO_BYTES = 200 * 1024 * 1024;
-const IMMUTABLE_CACHE_CONTROL = 'public, max-age=31536000, immutable';
-
 function mimeToExt(mimeType: string): string {
   if (mimeType.includes('png')) return 'png';
   if (mimeType.includes('webp')) return 'webp';
@@ -117,7 +115,6 @@ async function uploadToR2(
         body: {
           key,
           contentType: mimeType,
-          cacheControl: IMMUTABLE_CACHE_CONTROL,
         },
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -152,7 +149,6 @@ async function uploadToR2(
           method: 'PUT',
           headers: {
             'Content-Type': mimeType,
-            'Cache-Control': IMMUTABLE_CACHE_CONTROL,
           },
           body: fileBuffer,
           signal,
