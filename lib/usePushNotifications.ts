@@ -1,10 +1,11 @@
 import { useEffect, useRef } from 'react';
-import { Platform } from 'react-native';
+import { AppState, Platform, type AppStateStatus } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import { useAuthStore } from './authStore';
 
 // Expo Project ID aus app.json (für getExpoPushTokenAsync in Expo SDK 54 erforderlich)
 const EXPO_PROJECT_ID = '02ab536a-5836-4560-a5ec-2dfd6e059f90';
+const TOKEN_REFRESH_INTERVAL_MS = 12 * 60 * 60 * 1000;
 
 function pushPlatform(): 'ios' | 'android' | 'other' {
   if (Platform.OS === 'ios' || Platform.OS === 'android') return Platform.OS;
@@ -28,7 +29,8 @@ try {
 export function usePushNotifications() {
   const notificationListener = useRef<Notifications.EventSubscription | null>(null);
   const responseListener    = useRef<Notifications.EventSubscription | null>(null);
-  const tokenRegistered     = useRef(false);
+  const tokenSyncInFlight   = useRef(false);
+  const lastTokenSync       = useRef<{ userId: string; at: number } | null>(null);
 
   // ── Reaktiv auf Session warten ────────────────────────────────────────────
   // useAuthStore.getState().session ist beim ersten Mount noch null (SecureStore
@@ -40,10 +42,20 @@ export function usePushNotifications() {
     if (Platform.OS === 'web') return;
     // Noch nicht eingeloggt → warten
     if (!session || !profile?.id) return;
-    // Bereits registriert in dieser Session → nicht nochmal
-    if (tokenRegistered.current) return;
 
-    const register = async () => {
+    const register = async (force = false) => {
+      if (tokenSyncInFlight.current) return;
+      const now = Date.now();
+      const last = lastTokenSync.current;
+      if (
+        !force &&
+        last?.userId === profile.id &&
+        now - last.at < TOKEN_REFRESH_INTERVAL_MS
+      ) {
+        return;
+      }
+
+      tokenSyncInFlight.current = true;
       try {
         if (typeof Notifications.getPermissionsAsync !== 'function') return;
 
@@ -89,7 +101,7 @@ export function usePushNotifications() {
         });
 
         if (tokenRes.ok) {
-          tokenRegistered.current = true;
+          lastTokenSync.current = { userId: profile.id, at: Date.now() };
           return;
         }
 
@@ -106,7 +118,7 @@ export function usePushNotifications() {
         });
 
         if (fallbackRes.ok) {
-          tokenRegistered.current = true;
+          lastTokenSync.current = { userId: profile.id, at: Date.now() };
         } else {
           const tokenText = await tokenRes.text().catch(() => '');
           const fallbackText = await fallbackRes.text().catch(() => '');
@@ -118,10 +130,22 @@ export function usePushNotifications() {
         }
       } catch (err) {
         if (__DEV__) console.warn('[PushNotif] Fehler (Expo Go oder Stub):', (err as Error)?.message ?? err);
+      } finally {
+        tokenSyncInFlight.current = false;
       }
     };
 
-    register();
+    register(true);
+
+    const appStateSub = AppState.addEventListener('change', (state: AppStateStatus) => {
+      if (state === 'active') {
+        void register(false);
+      }
+    });
+
+    return () => {
+      appStateSub.remove();
+    };
   }, [session, profile?.id]); // Re-fires wenn Session/Profile verfügbar wird
 
   // Notification Listeners
