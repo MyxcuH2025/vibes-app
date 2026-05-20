@@ -2,7 +2,7 @@
   "expo": {
     "name": "Vibes",
     "slug": "vibes",
-    "version": "1.0.0",
+    "version": "1.26.4",
     "scheme": "vibes",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -29,7 +29,7 @@
       "entitlements": {
         "aps-environment": "production"
       },
-      "buildNumber": "154"
+      "buildNumber": "269"
     },
     "android": {
       "package": "app.vibes.social",
