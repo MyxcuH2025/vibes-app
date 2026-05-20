@@ -29,7 +29,7 @@
       "entitlements": {
         "aps-environment": "production"
       },
-      "buildNumber": "269"
+      "buildNumber": "270"
     },
     "android": {
       "package": "app.vibes.social",
